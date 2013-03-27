@@ -1,0 +1,6 @@
+#!/bin/sh
+#export BULLET_INSTALL_DIR=${HOME}/bullet/lib
+#export PKG_CONFIG_PATH=${BULLET_INSTALL_DIR}/pkgconfig
+rm -rf autom4te.cache
+libtoolize --force --copy &&  aclocal &&  autoheader &&  automake --add-missing --force-missing --copy --foreign &&  autoconf
+./configure && ./makeit

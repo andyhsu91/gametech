@@ -1,0 +1,308 @@
+
+material _missing_material_
+{
+    receive_shadows off
+    technique
+    {
+        pass
+        {
+            ambient 0.1 0.1 0.1 1.0
+            diffuse 0.8 0.0 0.0 1.0
+            specular 0.5 0.5 0.5 1.0 12.5
+            emissive 0.3 0.3 0.3 1.0
+        }
+    }
+}
+
+// Cardboard.Body genrated by blender2ogre 0.5.9
+
+material Cardboard.Body 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Cardboard.Body
+        {
+            ambient 0.800000011920929 0.44467273354530334 0.2032383531332016 1.0
+            diffuse 0.7015384778609643 0.38994378498644267 0.1782244034692937 1.0
+            specular 0.3316659247740503 0.24353716116221236 0.18707920049897098 1.0 2.5
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+            texture_unit 
+            {
+                texture DANBO.jpg
+                tex_address_mode wrap
+                scale 1.0 1.0
+            }
+        }
+    }
+}
+// Joint genrated by blender2ogre 0.5.9
+
+material Joint 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Joint
+        {
+            ambient 0.057799819856882095 0.057799819856882095 0.057799819856882095 1.0
+            diffuse 0.04528711062539714 0.04528711062539714 0.04528711062539714 1.0
+            specular 0.10439561307430267 0.10439561307430267 0.10439561307430267 1.0 3.25
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+        }
+    }
+}
+// Cardboard genrated by blender2ogre 0.5.9
+
+material Cardboard 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Cardboard
+        {
+            ambient 0.800000011920929 0.44467273354530334 0.2032383531332016 1.0
+            diffuse 0.7015384778609643 0.38994378498644267 0.1782244034692937 1.0
+            specular 0.3316659247740503 0.24353716116221236 0.18707920049897098 1.0 2.5
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+        }
+    }
+}
+// Coin Entrance genrated by blender2ogre 0.5.9
+
+material Coin_Entrance 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Coin Entrance
+        {
+            ambient 0.800000011920929 0.800000011920929 0.800000011920929 1.0
+            diffuse 0.693333350022634 0.693333350022634 0.693333350022634 1.0
+            specular 0.4005562455199829 0.4005562455199829 0.4005562455199829 1.0 2.0
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+        }
+    }
+}
+// Switch black genrated by blender2ogre 0.5.9
+
+material Switch_black 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Switch black
+        {
+            ambient 0.800000011920929 0.800000011920929 0.800000011920929 1.0
+            diffuse 0.0 0.0 0.0 1.0
+            specular 0.0 0.0 0.0 1.0 1.25
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+        }
+    }
+}
+// Cardboard.Face genrated by blender2ogre 0.5.9
+
+material Cardboard.Face 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Cardboard.Face
+        {
+            ambient 0.800000011920929 0.44467273354530334 0.2032383531332016 1.0
+            diffuse 0.7015384778609643 0.38994378498644267 0.1782244034692937 1.0
+            specular 0.3316659247740503 0.24353716116221236 0.18707920049897098 1.0 2.5
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+            texture_unit 
+            {
+                texture DANBO.jpg
+                tex_address_mode wrap
+                scale 1.0 1.0
+            }
+        }
+    }
+}
+// Eye genrated by blender2ogre 0.5.9
+
+material Eye 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Eye
+        {
+            ambient 0.031061571091413498 0.010872782208025455 0.0011964798904955387 1.0
+            diffuse 0.014609177620571234 0.005113791766661158 0.0005627399589109294 1.0
+            specular 0.008358097296518707 0.0028607595210381476 0.0008112914264817306 1.0 2.5
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+        }
+    }
+}
+// Mouth genrated by blender2ogre 0.5.9
+
+material Mouth 
+{
+    receive_shadows on 
+
+    technique
+    {
+        pass Mouth
+        {
+            ambient 0.03310070559382439 0.02906516008079052 0.024164197966456413 1.0
+            diffuse 0.0027280804619918553 0.0023954805167616666 0.001991555018823893 1.0
+            specular 0.03396736154306179 0.031249961379883118 0.031249961379883118 1.0 1.75
+            emissive 0.0 0.0 0.0 1.0
+
+            alpha_to_coverage off
+            colour_write on
+            cull_hardware clockwise
+            depth_check on
+            depth_func less_equal
+            depth_write on
+            illumination_stage 
+            light_clip_planes off
+            light_scissor off
+            lighting on
+            normalise_normals off
+            polygon_mode solid
+            scene_blend one zero
+            scene_blend_op add
+            shading gouraud
+            transparent_sorting on
+
+        }
+    }
+}

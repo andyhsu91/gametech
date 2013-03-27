@@ -1,0 +1,5 @@
+#!/bin/sh
+#export BULLET_INSTALL_DIR=${HOME}/bullet
+#export LD_RUN_PATH=${BULLET_INSTALL_DIR}/lib
+make clean
+make

@@ -1,0 +1,72 @@
+material Ball/Ball0
+{
+    technique
+    {
+        pass
+        {
+		    texture_unit
+			{
+			    texture GreenSkin.jpg
+			}
+        }
+    }
+}
+
+material Ball/Ball1
+{
+    technique
+    {
+        pass
+        {
+		    texture_unit
+			{
+			    texture droplet.png
+			}
+        }
+    }
+}
+
+material Ball/Ball2
+{
+    technique
+    {
+        pass
+        {
+		    texture_unit
+			{
+			    texture MtlPlat2.jpg
+			}
+        }
+    }
+}
+
+material Ball/Ball3
+{
+    technique
+    {
+        pass
+        {
+		    texture_unit
+			{
+			    texture NMBalls.png
+			}
+        }
+    }
+}
+
+material Ball/Ball4
+{
+    technique
+    {
+        pass
+        {
+		    texture_unit
+			{
+			    texture nm_bk.png
+			}
+        }
+    }
+}
+
+
+
