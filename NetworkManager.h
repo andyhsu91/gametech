@@ -9,7 +9,7 @@
 class NetworkManager {
     
     public:   
-		NetworkManager(bool isClient);
+		NetworkManager();
 		virtual ~NetworkManager();
 		void checkForClient();
 		bool checkForServer();

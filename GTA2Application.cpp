@@ -146,7 +146,8 @@ void GTA2Application::createScene(void)
  	
  	//Initialize sound manager
  	sound_manager = new SoundManager();
- 	network_manager = new NetworkManager(false);
+ 	//bool serverFound = NetworkManager->checkForServer();
+ 	network_manager = new NetworkManager();
     // Create a ball
     ball.initBall(mSceneMgr, &bullet, sound_manager, &score);
 

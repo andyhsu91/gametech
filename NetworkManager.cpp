@@ -39,13 +39,12 @@ bool isServer;
 
 
 
-NetworkManager::NetworkManager(bool isClient) {
+NetworkManager::NetworkManager() {
 	//SDL_Init(SDL_INIT_EVERYTHING);
+	bool serverFound = checkForServer();
 	
-	if(isClient){
-		checkForServer();
-	}
-	if(!isClient){
+	
+	if(serverFound){
 		if(SDLNet_Init() < 0){
 			std::cout<<"Error: could not initialize SDLNet"<<std::endl;
 			return;
