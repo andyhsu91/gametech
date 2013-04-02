@@ -24,7 +24,7 @@ const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
 const unsigned int PORT_NUM = 57996; //chosen randomly from range 49,152 to 65,535
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-const int serverSearchTimeout = 2;	//search for server for 2 seconds
+const int serverSearchTimeout = 5;	//search for server for 2 seconds
 
 //local variables
 SDLNet_SocketSet socketSet;
