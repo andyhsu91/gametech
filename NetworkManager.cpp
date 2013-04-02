@@ -24,7 +24,7 @@ const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
 const unsigned int PORT_NUM = 57996; //chosen randomly from range 49,152 to 65,535
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-
+const int serverSearchTimeout = 2;	//search for server for 2 seconds
 
 //local variables
 SDLNet_SocketSet socketSet;
@@ -94,9 +94,10 @@ bool NetworkManager::checkForServer(){
 	
 	
 	int count = 0;
+	
 	bool serverFound=false;
 	
-	while(count<100 && !serverFound){
+	while(count<(serverSearchTimeout*1000) && !serverFound){
 		int errorCode = SDLNet_UDP_Recv(socket, packet);
 		
 		if(errorCode == 1){
@@ -104,8 +105,10 @@ bool NetworkManager::checkForServer(){
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			serverFound=true;
 		}
-		count++;
-		usleep(1000); //sleep for 1000 microseconds
+		else{
+			count++;
+			usleep(1000); //sleep for 1000 microseconds = 1 millisecond
+		}
 	}
 	
 	if(serverFound){
