@@ -9,7 +9,8 @@ Filename:    GTA2Application.cpp
 #include "Environment.h"
 #include "Ball.h"
 #include "Score.h"
-#include <gameUpdate.h>
+#include "NetworkManager.h"
+#include "gameUpdate.h"
 #include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/Ogre/CEGUIOgreRenderer.h>
 #include <cstdlib>
@@ -145,7 +146,7 @@ void GTA2Application::createScene(void)
  	
  	//Initialize sound manager
  	sound_manager = new SoundManager();
- 	network_manager = new NetworkManager();
+ 	network_manager = new NetworkManager(false);
     // Create a ball
     ball.initBall(mSceneMgr, &bullet, sound_manager, &score);
 
