@@ -2,18 +2,8 @@
 #define _NetworkManager_H_
 
 #include <SDL/SDL_net.h>
+#include <gameUpdate.h>
 
-
-
-struct gameUpdate
-{	
-	//must be smaller than 512 bytes
-	float ballPos[3];
-	float ballVel[3];
-	float paddlePos[3];
-	bool  paddleDir[4];
-
-};
 
 
 class NetworkManager {

@@ -9,6 +9,7 @@ Filename:    GTA2Application.cpp
 #include "Environment.h"
 #include "Ball.h"
 #include "Score.h"
+#include <gameUpdate.h>
 #include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/Ogre/CEGUIOgreRenderer.h>
 #include <cstdlib>
@@ -33,10 +34,12 @@ static int wallScale = 4;
 
 static PhysicsSimulator bullet;
 SoundManager* sound_manager;
+NetworkManager* network_manager;
 vector<Player*> players;
 static Environment env;
 static Ball ball;
 static Score score;
+bool isMultiplayer;
 //static btRigidBody* ball;
 //Ogre::SceneNode* ballNode;
 
@@ -142,7 +145,7 @@ void GTA2Application::createScene(void)
  	
  	//Initialize sound manager
  	sound_manager = new SoundManager();
- 
+ 	network_manager = new NetworkManager();
     // Create a ball
     ball.initBall(mSceneMgr, &bullet, sound_manager, &score);
 
