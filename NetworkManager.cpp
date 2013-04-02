@@ -40,6 +40,7 @@ bool isServer;
 
 
 NetworkManager::NetworkManager() {
+	std::cout<<"Entered Network Manager()"<<std::endl;
 	//SDL_Init(SDL_INIT_EVERYTHING);
 	//check for server
 	bool serverFound = checkForServer();
@@ -72,10 +73,13 @@ NetworkManager::NetworkManager() {
 	//otherwise, become client
 	
 	
-	
+	std::cout<<"Exiting Network Manager()"<<std::endl;
 }
 
 bool NetworkManager::checkForServer(){
+
+	std::cout<<"Entered checkForServer()"<<std::endl;
+	
 	/* Listen for a broadcasted a UDP packet to all devices on the local network.
 	   If a UDP packet is received then the other computer is the server.
 	*/
@@ -100,7 +104,7 @@ bool NetworkManager::checkForServer(){
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			serverFound=true;
 		}
-		
+		count++;
 		usleep(1000); //sleep for 1000 microseconds
 	}
 	
@@ -126,11 +130,11 @@ bool NetworkManager::checkForServer(){
 		SDLNet_TCP_AddSocket(socketSet, serverSocket);
 		connectionOpen=true;
 		isServer=false;
-		
+		std::cout<<"Exiting checkForServer(). Returning true."<<std::endl;
 		return true;
 	}
 	
-	
+	std::cout<<"Exiting checkForServer(). Returning false."<<std::endl;
 	return false;
 	
 }
@@ -138,7 +142,7 @@ bool NetworkManager::checkForServer(){
 void NetworkManager::broadcastToClients(IPaddress data){
 	//server is broadcasting to all connected devices on local network
 	//clients should recieve the packet and respond by requesting a connection
-	
+	std::cout<<"Entering broadcastToClients()."<<std::endl;
 	UDPpacket* packet = SDLNet_AllocPacket(sizeof(IPaddress));
 	UDPsocket socket = SDLNet_UDP_Open(0);
 
@@ -152,11 +156,11 @@ void NetworkManager::broadcastToClients(IPaddress data){
 
 	SDLNet_UDP_Send(socket, -1, packet);
 	
-
+	std::cout<<"Exiting broadcastToClients()."<<std::endl;
 }
 
 void NetworkManager::checkForClient(){
-	
+	std::cout<<"Entering checkForClients()."<<std::endl;
 	//check to see if any client has requested a connection with server
 	if(clientSocket = SDLNet_TCP_Accept(serverSocket)){
 		
@@ -177,11 +181,14 @@ void NetworkManager::checkForClient(){
 		isServer=true;
 		connectionOpen = true;
 	
-	}		
+	}
+	
+	std::cout<<"Exiting checkForClients()."<<std::endl;		
 }
 
 bool NetworkManager::checkForPackets(){
-
+	std::cout<<"Entering checkForPackets()."<<std::endl;
+	bool retVal=false;
 	if(connectionOpen){
 		//check for activity with 0 millisecond timeout
 		int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); 
@@ -190,25 +197,29 @@ bool NetworkManager::checkForPackets(){
 		
 		if(socketsWithActivity > 0 && clientIsReady != 0 && isServer){
 			readPacket(clientSocket);
-			return true;
+			retVal = true;
 		}
 		if(socketsWithActivity > 0 && serverIsReady != 0 && !isServer){
 			readPacket(serverSocket);
-			return true;
+			retVal = true;
 		}
-		return false;
+		retVal = false;
 	}
-
+	std::cout<<"Exiting checkForClients()."<<std::endl;
+	return retVal;
 }
 
 
 bool NetworkManager::sendPacket(TCPsocket socket, gameUpdate update){
+
+	std::cout<<"Entering sendPacket()."<<std::endl;
 	
 	char* byteArray = static_cast<char*>(static_cast<void*>(&update));
 	
 	int numBytesSent = SDLNet_TCP_Send(socket, byteArray, sizeof(update));
 	
 	if(numBytesSent == sizeof(update)){
+		std::cout<<"Exiting sendPacket()."<<std::endl;
 		return true;
 	}
 	std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
@@ -218,12 +229,14 @@ bool NetworkManager::sendPacket(TCPsocket socket, gameUpdate update){
 
 
 void NetworkManager::readPacket(TCPsocket socket){
+	std::cout<<"Entering readPacket()."<<std::endl;
 	//blocking call, only call readPacket if you *know* a packet has been received
 	int numBytesReceived = SDLNet_TCP_Recv(socket, buffer, sizeof(buffer)-1); 
 
 	if(numBytesReceived == -1){
 		//error
 		std::cout<< SDLNet_GetError() <<std::endl;
+		std::cout<<"Exiting readPacket()."<<std::endl;
 		return;
 	}
 	else if(numBytesReceived == 0){
@@ -232,9 +245,10 @@ void NetworkManager::readPacket(TCPsocket socket){
 		SDLNet_TCP_Close(socket);
 		clientSocket=NULL;
 		connectionOpen = false;	
+		std::cout<<"Exiting readPacket()."<<std::endl;
 		return;
 	}
-
+	std::cout<<"Exiting readPacket()."<<std::endl;
 }
 
 NetworkManager::~NetworkManager() {
