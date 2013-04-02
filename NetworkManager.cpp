@@ -41,10 +41,11 @@ bool isServer;
 
 NetworkManager::NetworkManager() {
 	//SDL_Init(SDL_INIT_EVERYTHING);
+	//check for server
 	bool serverFound = checkForServer();
 	
-	
-	if(serverFound){
+	//if no server found, become one
+	if(!serverFound){
 		if(SDLNet_Init() < 0){
 			std::cout<<"Error: could not initialize SDLNet"<<std::endl;
 			return;
@@ -67,11 +68,10 @@ NetworkManager::NetworkManager() {
 		//add serverSocket to socketSet
 		SDLNet_TCP_AddSocket(socketSet, serverSocket);
 	}
-	//check for server
-	
-	//if no server found, become one
 	
 	//otherwise, become client
+	
+	
 	
 }
 
@@ -124,7 +124,8 @@ bool NetworkManager::checkForServer(){
 	
 		//add serverSocket to socketSet
 		SDLNet_TCP_AddSocket(socketSet, serverSocket);
-		
+		connectionOpen=true;
+		isServer=false;
 		
 		return true;
 	}
