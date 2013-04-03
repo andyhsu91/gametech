@@ -18,6 +18,8 @@ static int speedModifier = 3;
 
 static int edgeSize = 500;
 
+gameUpdate* mBallState;
+
 Ball::Ball(void)
 {
 }
@@ -27,8 +29,10 @@ Ball::~Ball(void)
 }
 //---------------------------------------------------------------------------
 void Ball::initBall(Ogre::SceneManager* pSceneMgr, 
-	PhysicsSimulator* sim, SoundManager* sm, Score* sc)
+	PhysicsSimulator* sim, SoundManager* sm, Score* sc, bool isServer)
 {
+	mBallState = new gameUpdate;
+	
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
 	sound_manager = sm;
@@ -46,10 +50,12 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr,
     ballz->setMaterialName("Examples/DANBO");
    	ballz->setCastShadows(true);
     
+    float mass = isServer ? 100.0 : 0.0;
+    
     //change this line for danbo vs sphere
     Ogre::Vector3 dim = 1*ballNode->getScale();
     Ogre::Vector3 pos = ballNode->getPosition();
-    ball = bullet->setRigidBoxBody(ballNode, dim, pos, 100.0);
+    ball = bullet->setRigidBoxBody(ballNode, dim, pos, mass);
     randomizeStartVelocity();
     ball->setLinearVelocity(startVelocity);
     
@@ -64,8 +70,16 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr,
     cooldown.setX(0.0);
     cooldown.setY(0.0);
     cooldown.setZ(0.0);
+    
+    mBallState->ballPos[0] = 0.0;
+    mBallState->ballPos[1] = 0.0;
+    mBallState->ballPos[2] = 0.0;
+    
+    mBallState->ballVel[0] = startVelocity.getX();
+    mBallState->ballVel[1] = startVelocity.getY();
+    mBallState->ballVel[2] = startVelocity.getZ();
 }
-void Ball::resetBall(btTransform ballTrans, btVector3 ballPos)
+void Ball::resetBall(btVector3 ballPos)
 {
 	
 	btVector3 opposite = btVector3(-ballPos.getX()/10, -ballPos.getY()/10, -ballPos.getZ()/10);
@@ -85,6 +99,14 @@ void Ball::resetBall(btTransform ballTrans, btVector3 ballPos)
     cooldown.setX(0.0);
     cooldown.setY(0.0);
     cooldown.setZ(0.0);
+    
+    mBallState->ballPos[0] = 0.0;
+    mBallState->ballPos[1] = 0.0;
+    mBallState->ballPos[2] = 0.0;
+    
+    mBallState->ballVel[0] = startVelocity.getX();
+    mBallState->ballVel[1] = startVelocity.getY();
+    mBallState->ballVel[2] = startVelocity.getZ();
 	
 }
 void Ball::updateBallPos(btVector3 ballPos){
@@ -144,8 +166,11 @@ void Ball::updateBallPos(btVector3 ballPos){
 	//update ball direction
 	(xDir > 0) ? currBallDir.setX(1.0) : currBallDir.setX(-1.0);
 	(yDir > 0) ? currBallDir.setY(1.0) : currBallDir.setY(-1.0);
-	(zDir > 0) ? currBallDir.setZ(1.0) : currBallDir.setZ(-1.0);	
+	(zDir > 0) ? currBallDir.setZ(1.0) : currBallDir.setZ(-1.0);
 	
+	mBallState->ballPos[0] = currBallPos.getX();
+    mBallState->ballPos[1] = currBallPos.getY();
+    mBallState->ballPos[2] = currBallPos.getZ();
 }
 void Ball::incrementBallType()
 {
@@ -183,11 +208,35 @@ void Ball::update()
 		abs(ballPos.getY()) > edgeSize*1.01 ||
 		abs(ballPos.getZ()) > edgeSize*1.01	)
 	{
-		resetBall(ballTrans, ballPos);
+		resetBall(ballPos);
 		
 		if(score->resetScore()) {
 			sound_manager->playFailure();
 		}
 	} 
+}
+void Ball::update(gameUpdate* update)
+{
+	mBallState = update;
+	
+	btVector3 ballPos = btVector3(update->ballPos[0], 
+		update->ballPos[1], update->ballPos[2]);
+	
+	updateBallPos(ballPos);
+	
+	if( abs(ballPos.getX()) > edgeSize*1.01 ||
+		abs(ballPos.getY()) > edgeSize*1.01 ||
+		abs(ballPos.getZ()) > edgeSize*1.01	)
+	{
+		resetBall(ballPos);
+		
+		if(score->resetScore()) {
+			sound_manager->playFailure();
+		}
+	} 
+}
+gameUpdate* Ball::getBallGameState()
+{
+	return mBallState;
 }
 

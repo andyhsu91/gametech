@@ -19,14 +19,20 @@ static int edgeSize = 500;
 static double paddleModifier = 400.0f;
 static double paddleScale = 0.75f;
 
-static bool padDirect[4] = {false}; 
+static bool padDirect[4] = {false};
+gameUpdate* mPlayerState;
+
+bool forceUpdate;
+ 
 
 Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, std::string node)
 {
+	forceUpdate = false;
+	
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
 	
-	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity", "cube.mesh");
+	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity"+node, "cube.mesh");
    	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
   		createChildSceneNode(node);
 		
@@ -44,6 +50,8 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, std::string
 	paddle->setCollisionFlags( paddle->getCollisionFlags() | 
 		btCollisionObject::CF_KINEMATIC_OBJECT);
 	paddle->setActivationState(DISABLE_DEACTIVATION);
+	
+	mPlayerState = new gameUpdate;
 
 }
 //---------------------------------------------------------------------------
@@ -61,33 +69,53 @@ void Player::updatePosition(const Ogre::FrameEvent& evt)
 
 	double movement_spd = paddleModifier * evt.timeSinceLastFrame;
 
-	if( padDirect[PAD_RIGHT] )
+	if( mPlayerState->paddleDir[PAD_RIGHT] )
 	{
 		if(pos.getX() < edgeSize/2)
 			pos.setX(pos.getX() + movement_spd);
 	}
-	if( padDirect[PAD_LEFT] )
+	if( mPlayerState->paddleDir[PAD_LEFT] )
 	{
 		if(pos.getX() > -edgeSize/2)
 			pos.setX(pos.getX() - movement_spd);
 	}
-	if( padDirect[PAD_UP] )
+	if( mPlayerState->paddleDir[PAD_UP] )
 	{
 
 		if(pos.getY() < edgeSize/2)
 			pos.setY(pos.getY() + movement_spd);
 	}
-	if( padDirect[PAD_DOWN] )
+	if( mPlayerState->paddleDir[PAD_DOWN] )
 	{
 		if(pos.getY() > -edgeSize/2)
 			pos.setY(pos.getY() - movement_spd);
 	}
 	
+	if(forceUpdate) {
+		pos.setX(mPlayerState->paddlePos[0]);
+		pos.setY(mPlayerState->paddlePos[1]);
+		pos.setZ(mPlayerState->paddlePos[2]);	
+	}
+	
 	trans.setOrigin(pos);
 	paddle->getMotionState()->setWorldTransform(trans);
+	
+	mPlayerState->paddlePos[0] = pos.getX();
+	mPlayerState->paddlePos[1] = pos.getY();
+	mPlayerState->paddlePos[2] = pos.getZ();
 
+}
+void Player::updatePosition(const Ogre::FrameEvent& evt, gameUpdate* update)
+{
+	mPlayerState = update;
+	forceUpdate = true;
+	updatePosition(evt);
 }
 void Player::updatePadDirection(int element, bool value)
 {
-	padDirect[element] = value;
+	mPlayerState->paddleDir[element] = value;
+}
+gameUpdate* Player::getPlayerGameState(void)
+{
+	return mPlayerState;
 }

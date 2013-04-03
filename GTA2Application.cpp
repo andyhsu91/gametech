@@ -41,19 +41,8 @@ static Environment env;
 static Ball ball;
 static Score score;
 bool isMultiplayer;
-//static btRigidBody* ball;
-//Ogre::SceneNode* ballNode;
+bool isServer;
 
-//float cooldownMax = 20.0; //# of frames the cooldown is in effect
-
-//btVector3 currBallPos;
-//btVector3 currBallDir;
-//btVector3 cooldown;
-
-
-
-//static int score = 0;
-//static int maxScore = 0;
 static char scoreString[16];
 static char highScoreString[32];
 CEGUI::Window *scorePointer;
@@ -61,6 +50,8 @@ CEGUI::Window *highScore;
 static bool mouseCam = true;
 static bool mute=false;
 static bool paused = false;
+
+gameUpdate* multiUpdate;
 
 
 //-------------------------------------------------------------------------------------
@@ -149,9 +140,11 @@ void GTA2Application::createScene(void)
  	
  	//Initialize Network Manager
  	network_manager = new NetworkManager();
+ 	isMultiplayer = network_manager->isConnectionOpen();
+ 	isServer = network_manager->isThisServer();
  	
     // Create a ball
-    ball.initBall(mSceneMgr, &bullet, sound_manager, &score);
+    ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer);
 
     // Create a Light and set its position
     Ogre::Light* light = mSceneMgr->createLight("MainLight");
@@ -161,6 +154,12 @@ void GTA2Application::createScene(void)
    
     //PADDLE ------------------------------------------------------------------
     players.push_back(new Player(mSceneMgr, &bullet, "paddlex0"));
+    
+    if(isMultiplayer) {
+    	cout << "HURF" << endl;
+    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex1"));
+    	multiUpdate = new gameUpdate;
+    }
    
 	sound_manager->playBackground(-1);
     
@@ -182,9 +181,70 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	if (!paused)
 	{
-		bullet.updateWorld(evt);
-		ball.update();
-		players[0]->updatePosition(evt);
+		if(isMultiplayer) {
+			if(isServer) {
+				bullet.updateWorld(evt);
+				ball.update();
+				players[0]->updatePosition(evt);
+
+				gameUpdate* ballState = ball.getBallGameState();
+				gameUpdate* hostState = players[0]->getPlayerGameState();
+				
+				multiUpdate->ballPos[0] = ballState->ballPos[0];
+				multiUpdate->ballPos[1] = ballState->ballPos[1];
+				multiUpdate->ballPos[2] = ballState->ballPos[2];
+				
+				multiUpdate->ballVel[0] = ballState->ballVel[0];
+				multiUpdate->ballVel[1] = ballState->ballVel[1];
+				multiUpdate->ballVel[2] = ballState->ballVel[2];
+				
+				multiUpdate->paddlePos[0] = hostState->paddlePos[0];
+				multiUpdate->paddlePos[1] = hostState->paddlePos[1];
+				multiUpdate->paddlePos[2] = hostState->paddlePos[2];
+				
+				multiUpdate->paddleDir[0] = hostState->paddleDir[0];
+				multiUpdate->paddleDir[1] = hostState->paddleDir[1];
+				multiUpdate->paddleDir[2] = hostState->paddleDir[2];
+				multiUpdate->paddleDir[3] = hostState->paddleDir[3];
+				
+				network_manager->sendPacket(*multiUpdate);
+
+				if(network_manager->checkForPackets()) 
+					players[1]->updatePosition(evt, network_manager->getGameUpdate());
+				else
+					players[1]->updatePosition(evt);
+					
+			} 
+			else {
+				players[0]->updatePosition(evt);
+				
+				if(network_manager->checkForPackets()) {
+					players[1]->updatePosition(evt, network_manager->getGameUpdate());
+					ball.update(network_manager->getGameUpdate());	
+				}
+				else
+					players[1]->updatePosition(evt);
+					
+				
+				gameUpdate* clientState = players[0]->getPlayerGameState();
+				
+				multiUpdate->paddlePos[0] = clientState->paddlePos[0];
+				multiUpdate->paddlePos[1] = clientState->paddlePos[1];
+				multiUpdate->paddlePos[2] = clientState->paddlePos[2];
+				
+				multiUpdate->paddleDir[0] = clientState->paddleDir[0];
+				multiUpdate->paddleDir[1] = clientState->paddleDir[1];
+				multiUpdate->paddleDir[2] = clientState->paddleDir[2];
+				multiUpdate->paddleDir[3] = clientState->paddleDir[3];
+				
+				network_manager->sendPacket(*multiUpdate);			
+			}				
+		} 
+		else {
+			bullet.updateWorld(evt);
+			ball.update();
+			players[0]->updatePosition(evt);
+		}
 
 		if(mWindow->isClosed() || mShutDown)
 		    return false;

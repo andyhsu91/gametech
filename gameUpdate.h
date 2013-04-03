@@ -8,7 +8,6 @@ struct gameUpdate
 	float ballVel[3];
 	float paddlePos[3];
 	bool  paddleDir[4];
-
 };
 
 

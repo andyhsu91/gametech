@@ -11,6 +11,7 @@ Filename:    Player.h
 #include <btBulletCollisionCommon.h>
 #include <stdio.h>
 #include "PhysicsSimulator.h"
+#include "gameUpdate.h"
 
 class Player
 {
@@ -19,7 +20,9 @@ public:
     ~Player(void);
 	btRigidBody* getRigidBody(void);
 	void updatePosition(const Ogre::FrameEvent& evt);
+	void updatePosition(const Ogre::FrameEvent& evt, gameUpdate* update);
 	void updatePadDirection(int element, bool value);
+	gameUpdate* getPlayerGameState(void);
 
 private:
 	Ogre::SceneManager* mSceneMgr;

@@ -13,6 +13,7 @@ Filename:    Ball.h
 #include "PhysicsSimulator.h"
 #include "Score.h"
 #include "SoundManager.h"
+#include "gameUpdate.h"
 
 class Ball
 {
@@ -20,12 +21,14 @@ public:
     Ball(void);
     virtual ~Ball(void);
 	void initBall(Ogre::SceneManager* pSceneMgr, 
-		PhysicsSimulator* sim, SoundManager* sm, Score* sc);
-	void resetBall(btTransform ballTrans, btVector3 ballPos);
+		PhysicsSimulator* sim, SoundManager* sm, Score* sc, bool isServer);
+	void resetBall(btVector3 ballPos);
 	void updateBallPos(btVector3 ballPos);
 	void incrementBallType();
 	void randomizeStartVelocity(void);
 	void update();
+	void update(gameUpdate* update);
+	gameUpdate* getBallGameState();
 
 private:
 	Ogre::SceneManager* mSceneMgr;
