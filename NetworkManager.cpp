@@ -87,6 +87,18 @@ bool NetworkManager::isThisServer(){
 	return isServer;
 }
 
+char* NetworkManager::intToCharArr(int ipAddress){
+	if(NM_debug){std::cout<<"Entered uint32ToCharArr()"<<std::endl;}
+	char ipAddr[16];
+    snprintf(ipAddr,sizeof ipAddr,"%u.%u.%u.%u" ,(ipAddress & 0xff000000) >> 24 
+                                                ,(ipAddress & 0x00ff0000) >> 16
+                                                ,(ipAddress & 0x0000ff00) >> 8
+                                                ,(ipAddress & 0x000000ff));
+  
+	if(NM_debug){std::cout<<"Exiting uint32ToCharArr()"<<std::endl;}
+	return ipAddr;
+}
+
 bool NetworkManager::checkForServer(){
 
 	if(NM_debug){std::cout<<"Entered checkForServer()"<<std::endl;}
@@ -133,9 +145,10 @@ bool NetworkManager::checkForServer(){
 		//received UDP packet from server, so make connection as a client
 		if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
-		char serverIP[16];
 		if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
-		snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)&packet->address.host); //convert uint32 address.host to char*
+		char* serverIP = intToCharArr(packet->address.host);
+		
+		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
 		if(SDLNet_ResolveHost(remoteIP, serverIP, PORT_NUM) < 0){ //get ip address of server
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return false;
