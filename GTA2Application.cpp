@@ -141,6 +141,7 @@ void GTA2Application::createScene(void)
  	//Initialize Network Manager
  	network_manager = new NetworkManager();
  	isMultiplayer = true;
+ 	bool connectionOpen = network_manager->isConnectionOpen();	
  	isServer = network_manager->isThisServer();
  	
  	if(isServer && !connectionOpen){
