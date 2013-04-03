@@ -145,7 +145,7 @@ void GTA2Application::createScene(void)
  	isServer = network_manager->isThisServer();
  	
  	if(isServer && !connectionOpen){
- 		waitForClientConnection();
+ 		network_manager->waitForClientConnection();
  		connectionOpen=network_manager->isConnectionOpen();	
  	}
  	
