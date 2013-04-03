@@ -17,9 +17,10 @@ class NetworkManager {
 		bool sendPacket(gameUpdate update);
 		void broadcastToClients();
 		gameUpdate* getGameUpdate();
-		bool isServer();
-		bool connectionOpen();
-	
+		bool isConnectionOpen();
+		bool isThisServer();
+		void waitForClient();
+		
 	private:
 		void readPacketToBuffer();
 		bool connectionOpen;

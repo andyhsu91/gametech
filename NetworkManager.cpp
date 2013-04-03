@@ -33,8 +33,6 @@ IPaddress myIp; 			//this computer's ip address
 IPaddress *remoteIP; 		//other computer's ip address
 
 char buffer[BUFFER_SIZE];
-bool connectionOpen;
-bool isServer;
 
 
 
@@ -79,11 +77,11 @@ NetworkManager::NetworkManager() {
 	std::cout<<"Exiting Network Manager()"<<std::endl;
 }
 
-bool NetworkManager::connectionOpen(){
+bool NetworkManager::isConnectionOpen(){
 	return connectionOpen;
 }
 
-bool NetworkManager::isServer(){
+bool NetworkManager::isThisServer(){
 	return isServer;
 }
 
@@ -152,6 +150,11 @@ bool NetworkManager::checkForServer(){
 	std::cout<<"Exiting checkForServer(). Returning false."<<std::endl;
 	return false;
 	
+}
+
+void NetworkManager::waitForClient(){
+	
+
 }
 
 void NetworkManager::broadcastToClients(){
