@@ -14,12 +14,12 @@ class NetworkManager {
 		void checkForClient();
 		bool checkForServer();
 		bool checkForPackets();
-		bool sendPacket(TCPsocket socket, gameUpdate update);
-		void broadcastToClients(IPaddress data);
-	
+		bool sendPacket(gameUpdate update);
+		void broadcastToClients();
+		gameUpdate* getGameUpdate();
 	
 	private:
-		void readPacket(TCPsocket socket);
+		void readPacketToBuffer(TCPsocket socket);
 };
 
 #endif 
