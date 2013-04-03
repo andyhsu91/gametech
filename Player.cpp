@@ -25,7 +25,8 @@ gameUpdate* mPlayerState;
 bool forceUpdate;
  
 
-Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, std::string node)
+Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
+	std::string node, std::string color)
 {
 	forceUpdate = false;
 	
@@ -42,7 +43,7 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, std::string
 	snode->attachObject(ent);
 	snode->scale(shapeDim.x/100, shapeDim.y/100, shapeDim.z);
 	snode->translate(position);
-   	ent->setMaterialName("Examples/Red50");
+   	ent->setMaterialName(color);
    	ent->setCastShadows(false);
    	
    	paddle = bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);

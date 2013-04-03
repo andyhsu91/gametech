@@ -153,11 +153,11 @@ void GTA2Application::createScene(void)
 	env.initEnvironment(mSceneMgr, &bullet);
    
     //PADDLE ------------------------------------------------------------------
-    players.push_back(new Player(mSceneMgr, &bullet, "paddlex0"));
+    players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50"));
     
     if(isMultiplayer) {
     	cout << "HURF" << endl;
-    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex1"));
+    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50"));
     	multiUpdate = new gameUpdate;
     }
    

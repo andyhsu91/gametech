@@ -16,7 +16,8 @@ Filename:    Player.h
 class Player
 {
 public:
-    Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, std::string node);
+    Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
+    	std::string node, std::string color);
     ~Player(void);
 	btRigidBody* getRigidBody(void);
 	void updatePosition(const Ogre::FrameEvent& evt);
