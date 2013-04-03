@@ -162,12 +162,14 @@ bool NetworkManager::checkForServer(){
 }
 
 void NetworkManager::waitForClientConnection(){
+	int millisecondsWaited = 0;
 	if(NM_debug){std::cout<<"Entered waitForClientConnection()"<<std::endl;}
-	while(!connectionOpen){
+	while(!connectionOpen && millisecondsWaited<=10000){
 		broadcastToClients();
 		usleep(1000); //wait for a millisecond to give clients time to respond
 		checkForClient();
 		usleep(4000); //wait some more so that we don't congest the network 
+		millisecondsWaited+=5;
 	}
 	if(NM_debug){std::cout<<"Exiting waitForClientConnection()"<<std::endl;}
 }
@@ -196,8 +198,9 @@ void NetworkManager::checkForClient(){
 	if(NM_debug){std::cout<<"Entering checkForClients()."<<std::endl;}
 	//check to see if any client has requested a connection with server
 	peerSocket = SDLNet_TCP_Accept(serverSocket);
-	if(!peerSocket){
-		printf("SDLNet_TCP_Accept: %s\n", SDLNet_GetError());
+	if(peerSocket==NULL){
+		//no client requested connection
+		printf("SDLNet_TCP_Accept: %s. No client found.\n", SDLNet_GetError());
 	}
 	else{
 		/* Now we can communicate with the client using peerSocket
