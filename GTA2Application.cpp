@@ -148,7 +148,9 @@ void GTA2Application::createScene(void)
  		network_manager->waitForClientConnection();
  		connectionOpen=network_manager->isConnectionOpen();	
  	}
- 	
+ 	if(!connectionOpen){
+ 		isMultiplayer=false;
+ 	}
     // Create a ball
     ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer);
 

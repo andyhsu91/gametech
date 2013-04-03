@@ -120,7 +120,7 @@ bool NetworkManager::checkForServer(){
 		if(errorCode == 1){
 			//success, copy UDP packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
-			if(NM_debug){std::cout<<"Server Found."<<std::endl;}
+			if(NM_debug){std::cout<<"Server packet recieved."<<std::endl;}
 			serverFound=true;
 		}
 		else{
@@ -131,15 +131,16 @@ bool NetworkManager::checkForServer(){
 	
 	if(serverFound){
 		//received UDP packet from server, so make connection as a client
+		if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 		char serverIP[16];
-		
+		if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
 		snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)&packet->address.host); //convert uint32 address.host to char*
 		if(SDLNet_ResolveHost(remoteIP, serverIP, PORT_NUM) < 0){ //get ip address of server
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return false;
 		}
-	
+		if(NM_debug){std::cout<<"opening TCP connection with server"<<std::endl;}
 		peerSocket = SDLNet_TCP_Open(remoteIP); //open TCP connection with the server
 	
 		if(peerSocket == NULL){
@@ -148,8 +149,9 @@ bool NetworkManager::checkForServer(){
 		}
 	
 		//add peerSocket to socketSet
+		if(NM_debug){std::cout<<"adding peerSocket to socketSet"<<std::endl;}
 		SDLNet_TCP_AddSocket(socketSet, peerSocket);
-		if(NM_debug){std::cout<<"Server Found. Opening Connection. Connecting as client."<<std::endl;}
+		if(NM_debug){std::cout<<"Opening Connection. Connecting as client."<<std::endl;}
 		connectionOpen=true;
 		isServer=false;
 		std::cout<<"Exiting checkForServer(). Returning true."<<std::endl;
