@@ -168,7 +168,7 @@ void NetworkManager::waitForClientConnection(){
 		broadcastToClients();
 		usleep(1000); //wait for a millisecond to give clients time to respond
 		checkForClient();
-		usleep(4000); //wait some more so that we don't congest the network 
+		usleep(99000); //wait some more so that we don't congest the network 
 		millisecondsWaited+=5;
 	}
 	if(NM_debug){std::cout<<"Exiting waitForClientConnection()"<<std::endl;}
@@ -177,7 +177,7 @@ void NetworkManager::waitForClientConnection(){
 void NetworkManager::broadcastToClients(){
 	//server is broadcasting to all connected devices on local network to PORT_NUM
 	//clients should listen for the packet and respond by requesting a TCP connection
-	if(NM_debug){std::cout<<"Entering broadcastToClients()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Entering broadcastToClients()."<<std::endl;}
 	UDPpacket* packet = SDLNet_AllocPacket(sizeof(IPaddress));
 	UDPsocket UdpSocket = SDLNet_UDP_Open(0);
 
@@ -191,16 +191,17 @@ void NetworkManager::broadcastToClients(){
 
 	SDLNet_UDP_Send(UdpSocket, -1, packet); //broadcast packet
 	
-	if(NM_debug){std::cout<<"Exiting broadcastToClients()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Exiting broadcastToClients()."<<std::endl;}
 }
 
 void NetworkManager::checkForClient(){
-	if(NM_debug){std::cout<<"Entering checkForClients()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Entering checkForClients()."<<std::endl;}
 	//check to see if any client has requested a connection with server
 	peerSocket = SDLNet_TCP_Accept(serverSocket);
 	if(peerSocket==NULL){
 		//no client requested connection
-		printf("SDLNet_TCP_Accept: %s. No client found.\n", SDLNet_GetError());
+		//printf("SDLNet_TCP_Accept: %s. No client found.\n", SDLNet_GetError());
+		if(NM_debug){std::cout<<"No client found..."<<std::endl;}
 	}
 	else{
 		/* Now we can communicate with the client using peerSocket
@@ -223,7 +224,7 @@ void NetworkManager::checkForClient(){
 	
 	}
 	
-	if(NM_debug){std::cout<<"Exiting checkForClients()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Exiting checkForClients()."<<std::endl;}
 }
 
 bool NetworkManager::checkForPackets(){
