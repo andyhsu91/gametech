@@ -31,7 +31,7 @@ IPaddress myIp; 			//this computer's ip address
 IPaddress *remoteIP; 		//other computer's ip address
 
 char buffer[BUFFER_SIZE];	//buffer for gameUpdates to be copied into when packets are recieved
-
+char conversion[16];
 
 
 NetworkManager::NetworkManager() {
@@ -87,16 +87,18 @@ bool NetworkManager::isThisServer(){
 	return isServer;
 }
 
-char* NetworkManager::intToCharArr(int ipAddress){
+void NetworkManager::intToCharArr(long ipAddress){
 	if(NM_debug){std::cout<<"Entered uint32ToCharArr()"<<std::endl;}
-	char ipAddr[16];
-    snprintf(ipAddr,sizeof ipAddr,"%u.%u.%u.%u" ,(ipAddress & 0xff000000) >> 24 
+    snprintf(conversion,sizeof(conversion),"%lu.%lu.%lu.%lu" ,(ipAddress & 0xff000000) >> 24 
                                                 ,(ipAddress & 0x00ff0000) >> 16
                                                 ,(ipAddress & 0x0000ff00) >> 8
                                                 ,(ipAddress & 0x000000ff));
   
+	std::cout<<"Converted "<<ipAddress<<" to "<<conversion<<std::endl;
+	
+	
 	if(NM_debug){std::cout<<"Exiting uint32ToCharArr()"<<std::endl;}
-	return ipAddr;
+	return ;
 }
 
 bool NetworkManager::checkForServer(){
@@ -146,10 +148,18 @@ bool NetworkManager::checkForServer(){
 		if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 		if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
-		char* serverIP = intToCharArr(packet->address.host);
 		
+		intToCharArr(packet->address.host);
+		//char* serverIP = conversion;
+		if(conversion == NULL){
+			std::cout<<"Error: conversion error"<<std::endl;
+		}else{
+			
+			std::cout<<"serverIP:"<<conversion<<std::endl;
+		}
+		if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
 		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
-		if(SDLNet_ResolveHost(remoteIP, serverIP, PORT_NUM) < 0){ //get ip address of server
+		if(SDLNet_ResolveHost(remoteIP, conversion, PORT_NUM) < 0){ //get ip address of server
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return false;
 		}
