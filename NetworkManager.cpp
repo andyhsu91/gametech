@@ -22,15 +22,15 @@ const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
 const unsigned int PORT_NUM = 57996; //chosen randomly from range 49,152 to 65,535
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-const int serverSearchTimeout = 1;	//search for server for 2 seconds
+const int serverSearchTimeout = 1;
 
 //local variables
-UDPsocket UdpSocket;	//socket for broadcasting and recieving UDP packets so that clients can find a server on the local network.
-SDLNet_SocketSet socketSet;
-TCPsocket serverSocket; //server only socket where clients can request connections
-TCPsocket clientSocket; //socket for communicating once connection is established
-IPaddress myIp; 		//this computer's ip address
-IPaddress *remoteIP; 	//other computer's ip address
+UDPsocket UdpSocket;		//socket for broadcasting and recieving UDP packets so that clients can find a server on the local network.
+SDLNet_SocketSet socketSet;	//socketSet for checking for new packets
+TCPsocket serverSocket; 	//server only socket where clients can request connections
+TCPsocket peerSocket; 		//socket for communicating once connection is established
+IPaddress myIp; 			//this computer's ip address
+IPaddress *remoteIP; 		//other computer's ip address
 
 char buffer[BUFFER_SIZE];
 bool connectionOpen;
@@ -42,8 +42,10 @@ NetworkManager::NetworkManager() {
 	std::cout<<"Entered Network Manager()"<<std::endl;
 	//SDL_Init(SDL_INIT_EVERYTHING);
 	//check for server
-	//bool serverFound = checkForServer();
-	bool serverFound = false;
+	
+	bool serverFound = checkForServer();
+	//bool serverFound = false;
+	
 	//if no server found, become one
 	if(!serverFound){
 		if(SDLNet_Init() < 0){
@@ -58,7 +60,7 @@ NetworkManager::NetworkManager() {
 			return;
 		}
 	
-		serverSocket = SDLNet_TCP_Open(&myIp);
+		serverSocket = SDLNet_TCP_Open(&myIp); //open a socket to listen for clients
 	
 		if(serverSocket == NULL){
 			std::cout<<"Error: could not create server socket."<<std::endl;
@@ -66,7 +68,7 @@ NetworkManager::NetworkManager() {
 		}
 	
 		//add serverSocket to socketSet
-		SDLNet_TCP_AddSocket(socketSet, serverSocket);
+		//SDLNet_TCP_AddSocket(socketSet, serverSocket);
 		
 		broadcastToClients();
 	}
@@ -75,6 +77,14 @@ NetworkManager::NetworkManager() {
 	
 	
 	std::cout<<"Exiting Network Manager()"<<std::endl;
+}
+
+bool NetworkManager::connectionOpen(){
+	return connectionOpen;
+}
+
+bool NetworkManager::isServer(){
+	return isServer;
 }
 
 bool NetworkManager::checkForServer(){
@@ -124,15 +134,15 @@ bool NetworkManager::checkForServer(){
 			return false;
 		}
 	
-		clientSocket = SDLNet_TCP_Open(remoteIP); //open TCP connection with the server
+		peerSocket = SDLNet_TCP_Open(remoteIP); //open TCP connection with the server
 	
-		if(clientSocket == NULL){
+		if(peerSocket == NULL){
 			std::cout<<"Error: could not create server socket."<<std::endl;
 			return false;
 		}
 	
-		//add serverSocket to socketSet
-		SDLNet_TCP_AddSocket(socketSet, clientSocket);
+		//add peerSocket to socketSet
+		SDLNet_TCP_AddSocket(socketSet, peerSocket);
 		connectionOpen=true;
 		isServer=false;
 		std::cout<<"Exiting checkForServer(). Returning true."<<std::endl;
@@ -167,13 +177,16 @@ void NetworkManager::broadcastToClients(){
 void NetworkManager::checkForClient(){
 	std::cout<<"Entering checkForClients()."<<std::endl;
 	//check to see if any client has requested a connection with server
-	if(clientSocket = SDLNet_TCP_Accept(serverSocket)){
-		
-		/* Now we can communicate with the client using clientSocket
+	peerSocket = SDLNet_TCP_Accept(serverSocket);
+	if(!peerSocket){
+		printf("SDLNet_TCP_Accept: %s\n", SDLNet_GetError());
+	}
+	else{
+		/* Now we can communicate with the client using peerSocket
 		* serverSocket will remain opened waiting other connections */
 	
 		/* Get the remote address */
-		if ((remoteIP = SDLNet_TCP_GetPeerAddress(clientSocket))){
+		if ((remoteIP = SDLNet_TCP_GetPeerAddress(peerSocket))){
 			/* Print the address, converting in the host format */
 			printf("Host connected: %x %d\n", SDLNet_Read32(&remoteIP->host), SDLNet_Read16(&remoteIP->port));
 		}
@@ -182,13 +195,13 @@ void NetworkManager::checkForClient(){
 			
 		}
 		
-		SDLNet_TCP_AddSocket(socketSet, clientSocket); //add clientSocket to socketSet
+		SDLNet_TCP_AddSocket(socketSet, peerSocket); //add peerSocket to socketSet
 		isServer=true;
 		connectionOpen = true;
 	
 	}
 	
-	std::cout<<"Exiting checkForClients()."<<std::endl;		
+	std::cout<<"Exiting checkForClients()."<<std::endl;
 }
 
 bool NetworkManager::checkForPackets(){
@@ -196,19 +209,17 @@ bool NetworkManager::checkForPackets(){
 	bool retVal=false;
 	if(connectionOpen){
 		//check for activity with 0 millisecond timeout
-		int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); 
-		int clientIsReady = SDLNet_SocketReady(clientSocket);
-		int serverIsReady = SDLNet_SocketReady(serverSocket);
+		int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); //refresh activity count of all sockets in set
+		int peerIsReady = SDLNet_SocketReady(peerSocket); //returns non-zero if server is ready
 		
-		if(socketsWithActivity > 0 && clientIsReady != 0 && isServer){
-			readPacketToBuffer(clientSocket);
+		if(socketsWithActivity > 0 && peerIsReady != 0){
+			readPacketToBuffer();
+			socketsWithActivity--;
 			retVal = true;
 		}
-		if(socketsWithActivity > 0 && serverIsReady != 0 && !isServer){
-			readPacketToBuffer(serverSocket);
-			retVal = true;
+		if(socketsWithActivity>0){
+			std::cout<<"Error: more than 1 socket with activity."<<std::endl;	
 		}
-		retVal = false;
 	}
 	std::cout<<"Exiting checkForClients()."<<std::endl;
 	return retVal;
@@ -218,9 +229,9 @@ bool NetworkManager::checkForPackets(){
 bool NetworkManager::sendPacket(gameUpdate update){	
 	std::cout<<"Entering sendPacket()."<<std::endl;
 
-	char* byteArray = static_cast<char*>(static_cast<void*>(&update));
+	char* byteArray = static_cast<char*>(static_cast<void*>(&update)); //cast gameUpdate to byteArray
 	
-	int numBytesSent = SDLNet_TCP_Send(clientSocket, byteArray, sizeof(update));
+	int numBytesSent = SDLNet_TCP_Send(peerSocket, byteArray, sizeof(update));
 	
 	if(numBytesSent == sizeof(update)){
 		std::cout<<"Exiting sendPacket()."<<std::endl;
@@ -236,10 +247,10 @@ gameUpdate* NetworkManager::getGameUpdate(){
 }
 
 
-void NetworkManager::readPacketToBuffer(TCPsocket socket){
+void NetworkManager::readPacketToBuffer(){
 	std::cout<<"Entering readPacket()."<<std::endl;
 	//blocking call, only call readPacket if you *know* a packet has been received
-	int numBytesReceived = SDLNet_TCP_Recv(socket, buffer, sizeof(buffer)-1); 
+	int numBytesReceived = SDLNet_TCP_Recv(peerSocket, buffer, sizeof(buffer)-1); 
 
 	if(numBytesReceived == -1){
 		//error
@@ -249,9 +260,9 @@ void NetworkManager::readPacketToBuffer(TCPsocket socket){
 	}
 	else if(numBytesReceived == 0){
 		//connection was closed by peer
-		SDLNet_TCP_DelSocket(socketSet, socket);
-		SDLNet_TCP_Close(socket);
-		clientSocket=NULL;
+		SDLNet_TCP_DelSocket(socketSet, peerSocket);
+		SDLNet_TCP_Close(peerSocket);
+		peerSocket=NULL;
 		connectionOpen = false;	
 		std::cout<<"Exiting readPacket()."<<std::endl;
 		return;
@@ -260,9 +271,9 @@ void NetworkManager::readPacketToBuffer(TCPsocket socket){
 }
 
 NetworkManager::~NetworkManager() {
-	if(clientSocket != NULL){
-		SDLNet_TCP_DelSocket(socketSet, clientSocket);
-		SDLNet_TCP_Close(clientSocket);
+	if(peerSocket != NULL){
+		SDLNet_TCP_DelSocket(socketSet, peerSocket);
+		SDLNet_TCP_Close(peerSocket);
 	}
 	if(serverSocket != NULL){
 		SDLNet_TCP_DelSocket(socketSet, serverSocket);
