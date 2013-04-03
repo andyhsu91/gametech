@@ -19,7 +19,7 @@ class NetworkManager {
 		gameUpdate* getGameUpdate();
 		bool isConnectionOpen();
 		bool isThisServer();
-		void waitForClient();
+		void waitForClientConnection();
 		
 	private:
 		void readPacketToBuffer();

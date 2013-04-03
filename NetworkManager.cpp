@@ -39,12 +39,13 @@ char buffer[BUFFER_SIZE];
 NetworkManager::NetworkManager() {
 	std::cout<<"Entered Network Manager()"<<std::endl;
 	//SDL_Init(SDL_INIT_EVERYTHING);
-	//check for server
 	
+	
+	//check for server, and attempt to become client
 	bool serverFound = checkForServer();
-	//bool serverFound = false;
+
 	
-	//if no server found, become one
+	//if no server found, become a server, and check for clients
 	if(!serverFound){
 		if(SDLNet_Init() < 0){
 			std::cout<<"Error: could not initialize SDLNet"<<std::endl;
@@ -67,11 +68,12 @@ NetworkManager::NetworkManager() {
 	
 		//add serverSocket to socketSet
 		//SDLNet_TCP_AddSocket(socketSet, serverSocket);
-		
+		isServer=true;
 		broadcastToClients();
+		usleep(1000);
+		checkForClient();
 	}
-	
-	//otherwise, become client
+
 	
 	
 	std::cout<<"Exiting Network Manager()"<<std::endl;
@@ -93,8 +95,13 @@ bool NetworkManager::checkForServer(){
 	   If a UDP packet is received then the other computer is the server.
 	*/
 	
+	if(UdpSocket==NULL){	
+		UdpSocket = SDLNet_UDP_Open(PORT_NUM);
+	}
+	
 	UDPpacket* packet = SDLNet_AllocPacket(sizeof(IPaddress));
-	UDPsocket UdpSocket = SDLNet_UDP_Open(PORT_NUM);
+	
+	
 	IPaddress packetData;
 	
 	if(UdpSocket == NULL){
@@ -152,9 +159,12 @@ bool NetworkManager::checkForServer(){
 	
 }
 
-void NetworkManager::waitForClient(){
-	
-
+void NetworkManager::waitForClientConnection(){
+	while(!connectionOpen){
+		broadcastToClients();
+		usleep(1000); //sleep for 1000 microseconds = 1 millisecond
+		checkForClient();
+	}
 }
 
 void NetworkManager::broadcastToClients(){
