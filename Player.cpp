@@ -33,7 +33,7 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
 	
-	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity"+node, "cube.mesh");
+	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity"+ node, "cube.mesh");
    	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
   		createChildSceneNode(node);
 		
@@ -52,12 +52,14 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 		btCollisionObject::CF_KINEMATIC_OBJECT);
 	paddle->setActivationState(DISABLE_DEACTIVATION);
 	
-	mPlayerState = new gameUpdate;
+	mPlayerState = new gameUpdate; //allocating mem on heap
 
 }
 //---------------------------------------------------------------------------
 Player::~Player(void)
 {	
+	if(mPlayerState){delete mPlayerState;} //freeing heap mem
+
 }
 btRigidBody* Player::getRigidBody(void)
 {

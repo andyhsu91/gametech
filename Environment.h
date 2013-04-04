@@ -17,7 +17,7 @@ class Environment
 public:
     Environment(void);
     virtual ~Environment(void);
-	void initEnvironment(Ogre::SceneManager* pSceneMgr, PhysicsSimulator *sim);
+	void initEnvironment(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim);
 
 private:
 	Ogre::SceneManager* mSceneMgr;

@@ -62,6 +62,8 @@ GTA2Application::GTA2Application(void)
 //-------------------------------------------------------------------------------------
 GTA2Application::~GTA2Application(void)
 {
+	if(sound_manager){delete sound_manager;}
+	if(network_manager){delete network_manager;}
 }
 //-------------------------------------------------------------------------------------
 void GTA2Application::createCamera(void)
@@ -144,11 +146,11 @@ void GTA2Application::createScene(void)
  	bool connectionOpen = network_manager->isConnectionOpen();	
  	isServer = network_manager->isThisServer();
  	
- 	if(isServer && !connectionOpen){
+ 	if(isMultiplayer && isServer && !connectionOpen){
  		network_manager->waitForClientConnection();
  		connectionOpen=network_manager->isConnectionOpen();	
  	}
- 	if(!connectionOpen){
+ 	if(isMultiplayer && !connectionOpen){
  		isMultiplayer=false;
  	}
     // Create a ball

@@ -58,13 +58,13 @@ PhysicsSimulator::~PhysicsSimulator(void)
 //---------------------------------------------------------------------------
 void PhysicsSimulator::initPhysics(Ogre::SceneManager* pSceneMgr)
 {
-	collisionConfiguration = new btDefaultCollisionConfiguration();
-	dispatcher = new btCollisionDispatcher(collisionConfiguration);
-	overlappingPairCache = new btDbvtBroadphase();
-	solver = new btSequentialImpulseConstraintSolver;
+	collisionConfiguration = new btDefaultCollisionConfiguration(); //safe
+	dispatcher = new btCollisionDispatcher(collisionConfiguration); //safe
+	overlappingPairCache = new btDbvtBroadphase(); //safe
+	solver = new btSequentialImpulseConstraintSolver; //safe
 
 	dynamicsWorld = new btDiscreteDynamicsWorld
-		(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+		(dispatcher, overlappingPairCache, solver, collisionConfiguration); //safe
 
 	dynamicsWorld->setGravity(btVector3(0, gravity, 0));
 }
@@ -112,7 +112,7 @@ btRigidBody* PhysicsSimulator::setRigidBoxBody(Ogre::SceneNode *snode,
 	btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 //	MyMotionState* motionState = new MyMotionState(snode);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
-	btRigidBody* body = new btRigidBody(rbInfo);
+	btRigidBody* body = new btRigidBody(rbInfo); 
 	body->setUserPointer((void *) (snode));
 
 	dynamicsWorld->addRigidBody(body); 

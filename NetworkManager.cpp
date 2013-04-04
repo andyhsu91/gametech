@@ -19,7 +19,7 @@ const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
 const unsigned int PORT_NUM = 57996; //chosen randomly from range 49,152 to 65,535
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-const int serverSearchTimeout = 1; //number of seconds to search for server
+const int serverSearchTimeout = 3; //number of seconds to search for server
 bool NM_debug = true;
 
 //local variables
@@ -31,7 +31,7 @@ IPaddress myIp; 			//this computer's ip address
 IPaddress *remoteIP; 		//other computer's ip address
 
 char buffer[BUFFER_SIZE];	//buffer for gameUpdates to be copied into when packets are recieved
-char conversion[16];
+char* conversion;
 
 
 NetworkManager::NetworkManager() {
@@ -87,18 +87,20 @@ bool NetworkManager::isThisServer(){
 	return isServer;
 }
 
-void NetworkManager::intToCharArr(long ipAddress){
-	if(NM_debug){std::cout<<"Entered uint32ToCharArr()"<<std::endl;}
-    snprintf(conversion,sizeof(conversion),"%lu.%lu.%lu.%lu" ,(ipAddress & 0xff000000) >> 24 
+char*  NetworkManager::intToIpAddr(long ipAddress){
+	//if(NM_debug){std::cout<<"Entered intToIpAddr()"<<std::endl;}
+	char* ipAddr = new char[16]; //allocate it on heap
+    snprintf(ipAddr,16,"%lu.%lu.%lu.%lu" ,(ipAddress & 0xff000000) >> 24 
                                                 ,(ipAddress & 0x00ff0000) >> 16
                                                 ,(ipAddress & 0x0000ff00) >> 8
                                                 ,(ipAddress & 0x000000ff));
   
-	std::cout<<"Converted "<<ipAddress<<" to "<<conversion<<std::endl;
+	std::cout<<"Converted "<<ipAddress<<" to "<<ipAddr<<std::endl;
 	
-	
-	if(NM_debug){std::cout<<"Exiting uint32ToCharArr()"<<std::endl;}
-	return ;
+	if(conversion){delete conversion;}//delete possible previous conversions
+	conversion = ipAddr;
+	//if(NM_debug){std::cout<<"Exiting intToIpAddr()"<<std::endl;}
+	return ipAddr;
 }
 
 bool NetworkManager::checkForServer(){
@@ -135,6 +137,10 @@ bool NetworkManager::checkForServer(){
 			//success, copy UDP packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			if(NM_debug){std::cout<<"Server packet recieved."<<std::endl;}
+			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<packetData.port<<std::endl;}
+			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<packet->address.port<<std::endl;}
+			packetData.host = packet->address.host;
+			packetData.port = PORT_NUM;
 			serverFound=true;
 		}
 		else{
@@ -149,7 +155,7 @@ bool NetworkManager::checkForServer(){
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 		if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
 		
-		intToCharArr(packet->address.host);
+		intToIpAddr(packet->address.host);
 		//char* serverIP = conversion;
 		if(conversion == NULL){
 			std::cout<<"Error: conversion error"<<std::endl;
@@ -159,12 +165,24 @@ bool NetworkManager::checkForServer(){
 		}
 		if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
 		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
-		if(SDLNet_ResolveHost(remoteIP, conversion, PORT_NUM) < 0){ //get ip address of server
+		char* ipAddr=intToIpAddr(packet->address.host);
+		std::cout<<"result of intToIpAddr:"<<ipAddr<<std::endl;
+		
+		
+		
+		//this damn line keeps causing segfaults...
+		//int errorCode = SDLNet_ResolveHost(remoteIP, ipAddr, PORT_NUM);
+		
+		int errorCode = 0;
+		
+		
+		if(errorCode != 0){ 
+			//failure
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return false;
 		}
 		if(NM_debug){std::cout<<"opening TCP connection with server"<<std::endl;}
-		peerSocket = SDLNet_TCP_Open(remoteIP); //open TCP connection with the server
+		peerSocket = SDLNet_TCP_Open(&packetData); //open TCP connection with the server
 	
 		if(peerSocket == NULL){
 			std::cout<<"Error: could not create server socket."<<std::endl;
@@ -191,10 +209,10 @@ void NetworkManager::waitForClientConnection(){
 	if(NM_debug){std::cout<<"Entered waitForClientConnection()"<<std::endl;}
 	while(!connectionOpen && millisecondsWaited<=10000){
 		broadcastToClients();
-		usleep(1000); //wait for a millisecond to give clients time to respond
+		usleep(2000); //wait for little bit to give clients time to respond
 		checkForClient();
-		usleep(99000); //wait some more so that we don't congest the network 
-		millisecondsWaited+=5;
+		usleep(98000); //wait some more so that we don't congest the network 
+		millisecondsWaited+=100;
 	}
 	if(NM_debug){std::cout<<"Exiting waitForClientConnection()"<<std::endl;}
 }
@@ -320,6 +338,7 @@ void NetworkManager::readPacketToBuffer(){
 }
 
 NetworkManager::~NetworkManager() {
+	if(conversion){delete conversion;}
 	if(peerSocket != NULL){
 		SDLNet_TCP_DelSocket(socketSet, peerSocket);
 		SDLNet_TCP_Close(peerSocket);

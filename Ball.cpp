@@ -26,12 +26,13 @@ Ball::Ball(void)
 //---------------------------------------------------------------------------
 Ball::~Ball(void)
 {	
+	if(mBallState){delete mBallState;}
 }
 //---------------------------------------------------------------------------
 void Ball::initBall(Ogre::SceneManager* pSceneMgr, 
 	PhysicsSimulator* sim, SoundManager* sm, Score* sc, bool isServer)
 {
-	mBallState = new gameUpdate;
+	mBallState = new gameUpdate; //safe
 	
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
