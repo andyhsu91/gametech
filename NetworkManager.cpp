@@ -211,8 +211,8 @@ void NetworkManager::waitForClientConnection(){
 		broadcastToClients();
 		usleep(2000); //wait for little bit to give clients time to respond
 		checkForClient();
-		usleep(98000); //wait some more so that we don't congest the network 
-		millisecondsWaited+=100;
+		usleep(498000); //wait some more so that we don't congest the network 
+		millisecondsWaited+=500;
 	}
 	if(NM_debug){std::cout<<"Exiting waitForClientConnection()"<<std::endl;}
 }
