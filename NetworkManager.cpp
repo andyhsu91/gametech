@@ -23,7 +23,7 @@ const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
 const unsigned int PORT_NUM = 57996; //36066 in network byte order
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-const int serverSearchTimeout = 3; //number of seconds to search for server
+const int serverSearchTimeout = 7; //number of seconds to search for server
 bool NM_debug = true;
 
 //local variables
