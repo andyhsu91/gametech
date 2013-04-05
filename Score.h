@@ -38,7 +38,7 @@ public:
 		bool result = false;
 		if(score > maxScore) {
 			maxScore = score;
-			sprintf (topPlayer, "Player 1");
+			sprintf(topPlayer, "Player 1");
 		} else {
 			result = true;
 		}

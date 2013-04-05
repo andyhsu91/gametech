@@ -20,6 +20,7 @@ class NetworkManager {
 		bool isConnectionOpen();
 		bool isThisServer();
 		void waitForClientConnection();
+		char* intToIpAddr(long ipAddress);
 		char* intToIpAddr(long ipAddr, bool networkByteOrder);
 		int getMyIp();
 		

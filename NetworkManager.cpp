@@ -20,11 +20,14 @@
 
 //constants
 const unsigned int MAX_SOCKETS = 2;
-const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
-const unsigned int PORT_NUM = 57996; //36066 in network byte order
+const unsigned int BUFFER_SIZE = sizeof(gameUpdate)+1;
+const unsigned int PORT_NUM = 57996; 	//36066 in network byte order, randomly chosen port num to use for Network Manager
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-const int serverSearchTimeout = 5; //number of seconds to search for server
-bool NM_debug = true;
+const int serverSearchTimeout = 3; 		//number of seconds to search for server if client
+const int clientSearchTimeout = 10;		//number of seconds to search for client if server
+const int clientResponseTimeout = 3; 	//milliseconds to wait for clients to respond to broadcast
+const int serverBroadcastTimeout = 500;	//milliseconds to wait between server rebroadcasts
+const bool NM_debug = true;				//toggles debug print statements
 
 //local variables
 UDPsocket UdpSocket;		//socket for broadcasting and recieving UDP packets so that clients can find a server on the local network.
@@ -35,8 +38,10 @@ IPaddress myIp; 			//this computer's ip address
 IPaddress *remoteIP; 		//other computer's ip address
 
 char buffer[BUFFER_SIZE];	//buffer for gameUpdates to be copied into when packets are recieved
-char* conversion;
+char* conversion;			//pointer to last intToIpAddr conversion to avoid memory leaks
 
+long packetsReceived = 0;
+long packetsSent = 0;
 
 NetworkManager::NetworkManager() {
 	connectionOpen=false;
@@ -74,7 +79,7 @@ NetworkManager::NetworkManager() {
 			return;
 		}
 		
-		std::cout<<"Server has opened socket with IP: "<< intToIpAddr(myIp.host, true)<<" and Port: "<<SDLNet_Read16(&myIp.port)<<std::endl;
+		std::cout<<"Server has opened socket with IP: "<< intToIpAddr(myIp.host)<<" and Port: "<<SDLNet_Read16(&myIp.port)<<std::endl;
 		//add serverSocket to socketSet
 		//SDLNet_TCP_AddSocket(socketSet, serverSocket);
 		isServer=true;
@@ -98,13 +103,13 @@ bool NetworkManager::isThisServer(){
 }
 
 int NetworkManager::getMyIp(){
-
-	//this is ghetto, shouldn't be doing this, but SDL_net does not provide this functionality for some reason.
+	//get this computer's ip address in network byte order
 	
-	//write this computer's Ip address to myIp.txt
+	//this is ghetto, shouldn't be doing this, but SDL_net does not provide this functionality for some reason.
+	//call ifconfig and write this computer's Ip address to myIp.txt
 	int retVal = system("/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > myIp.txt");
 	
-	//read myIp.txt to get it
+	//read myIp.txt to get ip address as string
 	std::string line;
   	std::ifstream myfile;
   	usleep(5000); //wait 5 milliseconds
@@ -119,9 +124,10 @@ int NetworkManager::getMyIp(){
 	}
 	
 	if(gotString){
-		
+		//convert string to 32 bit integer
 		int retVal = inet_addr(line.c_str());
 		if(NM_debug){std::cout<<"ifconfig says myIp="<<line<<", converted to "<<retVal<<std::endl;}
+		//return 32 bit ip address in network byte order
 		return retVal;
 	}
 	else{
@@ -130,27 +136,29 @@ int NetworkManager::getMyIp(){
 	}
 }
 
+char*  NetworkManager::intToIpAddr(long ipAddress){
+	return intToIpAddr(ipAddress, true);
+}
+
 char*  NetworkManager::intToIpAddr(long ipAddress, bool networkByteOrder){
-	//if(NM_debug){std::cout<<"Entered intToIpAddr()"<<std::endl;}
+	
 	char* ipAddr = new char[16]; //allocate it on heap
     if(!networkByteOrder){
-    	snprintf(ipAddr,16,"%lu.%lu.%lu.%lu",(ipAddress & 0xff000000) >> 24 
-                                                ,(ipAddress & 0x00ff0000) >> 16
-                                                ,(ipAddress & 0x0000ff00) >> 8
-                                                ,(ipAddress & 0x000000ff));
+    	//reorder bytes to network byte order
+    	ipAddress = SDLNet_Read32(&ipAddress);
     }
-    else{
-    	snprintf(ipAddr,16,"%lu.%lu.%lu.%lu", (ipAddress & 0x000000ff)
-                                                ,(ipAddress & 0x0000ff00) >> 8
-                                                ,(ipAddress & 0x00ff0000) >> 16
-                                                ,(ipAddress & 0xff000000) >> 24);
-    }
+    //convert network byte order ip address to char*
+	snprintf(ipAddr,16,"%lu.%lu.%lu.%lu", (ipAddress & 0x000000ff)
+                                            ,(ipAddress & 0x0000ff00) >> 8
+                                            ,(ipAddress & 0x00ff0000) >> 16
+                                            ,(ipAddress & 0xff000000) >> 24);
+    
   
-	std::cout<<"Converted "<<ipAddress<<" to "<<ipAddr<<std::endl;
+	//if(NM_debug){std::cout<<"Converted "<<ipAddress<<" to "<<ipAddr<<std::endl;}
 	
-	if(conversion){delete conversion;}//delete possible previous conversions
-	conversion = ipAddr;
-	//if(NM_debug){std::cout<<"Exiting intToIpAddr()"<<std::endl;}
+	if(conversion){delete conversion;}//delete possible previous conversions from heap
+	conversion = ipAddr;//keep track to avoid memory leak
+	
 	return ipAddr;
 }
 
@@ -180,7 +188,7 @@ bool NetworkManager::checkForServer(){
 	int count = 0;
 	bool serverFound=false;
 	
-	if(NM_debug){std::cout<<"Listening for server broadcast packets..."<<std::endl;}
+	if(NM_debug){std::cout<<"Listening "<<serverSearchTimeout<<" seconds for server broadcast packets..."<<std::endl;}
 	//check for server broadcast packet
 	while(count<(serverSearchTimeout*1000) && !serverFound){
 		int errorCode = SDLNet_UDP_Recv(UdpSocket, packet);
@@ -189,12 +197,12 @@ bool NetworkManager::checkForServer(){
 			//successfully recieved UDP packet, copy packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			if(NM_debug){std::cout<<"Packet recieved."<<std::endl;}
-			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host, true)<<", packetData.port="<<SDLNet_Read16(&packetData.port)<<std::endl;}
-			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host, true)<<", packet.port="<<SDLNet_Read16(&packet->address.port)<<std::endl;}
+			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<SDLNet_Read16(&packetData.port)<<std::endl;}
+			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<SDLNet_Read16(&packet->address.port)<<std::endl;}
 			//packetData.host = packet->address.host;
 			//packetData.port = packet->address.port;
-			if(SDLNet_Read16(&packetData.port)== PORT_NUM){
-				if(NM_debug){std::cout<<"Packet is server packet."<<std::endl;}
+			if(SDLNet_Read16(&packetData.port) == PORT_NUM){
+				if(NM_debug){std::cout<<"Packet is a server packet."<<std::endl;}
 				serverFound=true;
 			} else{
 				if(NM_debug){std::cout<<"Packet is garbage."<<std::endl;}
@@ -208,18 +216,17 @@ bool NetworkManager::checkForServer(){
 	
 	if(serverFound){
 		//received UDP packet from server, so make connection as a client
-		if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
+		//if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 		//if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
 		
-		char* ipAddr=intToIpAddr(packet->address.host, true);
+		//char* ipAddr=intToIpAddr(packet->address.host, true);
 		//char* serverIP = conversion;
-		if(ipAddr == NULL){
+		/*if(ipAddr == NULL){
 			std::cout<<"Error: conversion error"<<std::endl;
 		}else{
-			
 			std::cout<<"serverIP:"<<ipAddr<<std::endl;
-		}
+		}*/
 		//if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
 		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
 		//char* ipAddr=intToIpAddr(packet->address.host, true);
@@ -240,14 +247,14 @@ bool NetworkManager::checkForServer(){
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return false;
 		}*/
-		if(NM_debug){std::cout<<"opening TCP connection with server"<<std::endl;}
+		if(NM_debug){std::cout<<"opening TCP connection with server at "<<intToIpAddr(packetData.host)<<":"<<SDLNet_Read16(&packetData.port)<<std::endl;}
 		peerSocket = SDLNet_TCP_Open(&packetData); //open TCP connection with the server
 	
 		if(peerSocket == NULL){
 			std::cout<<"Error: could not open connection with server from packet data"<<std::endl;
 			packetData.host = packet->address.host;
 			packetData.port = packet->address.port;
-			
+			if(NM_debug){std::cout<<"opening TCP connection with server at "<<intToIpAddr(packetData.host)<<":"<<SDLNet_Read16(&packetData.port)<<std::endl;}
 			peerSocket = SDLNet_TCP_Open(&packetData);
 			
 			if(peerSocket == NULL){
@@ -257,12 +264,12 @@ bool NetworkManager::checkForServer(){
 		}
 	
 		//add peerSocket to socketSet
-		if(NM_debug){std::cout<<"adding peerSocket to socketSet"<<std::endl;}
+		//if(NM_debug){std::cout<<"adding peerSocket to socketSet"<<std::endl;}
 		SDLNet_TCP_AddSocket(socketSet, peerSocket);
-		if(NM_debug){std::cout<<"Opening Connection. Connecting as client."<<std::endl;}
+		if(NM_debug){std::cout<<"Connected successfully to server."<<std::endl;}
 		connectionOpen=true;
 		isServer=false;
-		std::cout<<"Exiting checkForServer(). Returning true."<<std::endl;
+		std::cout<<"Exiting checkForServer()."<<std::endl;
 		return true;
 	}
 	else{
@@ -275,15 +282,20 @@ bool NetworkManager::checkForServer(){
 }
 
 void NetworkManager::waitForClientConnection(){
-	int millisecondsWaited = 0;
 	if(NM_debug){std::cout<<"Entered waitForClientConnection()"<<std::endl;}
-	while(!connectionOpen && millisecondsWaited<=15000){
+	
+	int millisecondsWaited = 0;
+	
+	std::cout<<"Broadcasting on local network for "<<clientSearchTimeout<<" seconds every "<<serverBroadcastTimeout<<" milliseconds..."<<std::endl;
+	
+	while(!connectionOpen && millisecondsWaited<=clientSearchTimeout*1000){
 		broadcastToClients();
-		usleep(2000); //wait for little bit to give clients time to respond
+		usleep(clientResponseTimeout*1000); //wait for little bit to give clients time to respond
 		checkForClient();
-		usleep(498000); //wait some more so that we don't congest the network 
-		millisecondsWaited+=500;
+		usleep((serverBroadcastTimeout-clientResponseTimeout)*1000); //wait some more so that we don't congest the network 
+		millisecondsWaited += (clientResponseTimeout + serverBroadcastTimeout);
 	}
+	
 	if(NM_debug){std::cout<<"Exiting waitForClientConnection()"<<std::endl;}
 }
 
@@ -301,7 +313,7 @@ void NetworkManager::broadcastToClients(){
 	packet->address.port = addr.port;
 	packet->len = sizeof(myIp);
 	memcpy(packet->data, &myIp, sizeof(myIp));
-	if(NM_debug){std::cout<<"Broadcasting to clients..."<<std::endl;}
+	//if(NM_debug){std::cout<<"Broadcasting to clients..."<<std::endl;}
 	SDLNet_UDP_Send(UdpSocket, -1, packet); //broadcast packet
 	
 	//if(NM_debug){std::cout<<"Exiting broadcastToClients()."<<std::endl;}
@@ -309,31 +321,32 @@ void NetworkManager::broadcastToClients(){
 
 void NetworkManager::checkForClient(){
 	//if(NM_debug){std::cout<<"Entering checkForClients()."<<std::endl;}
+	
 	//check to see if any client has requested a connection with server
 	peerSocket = SDLNet_TCP_Accept(serverSocket);
 	if(peerSocket==NULL){
 		//no client requested connection
 		//printf("SDLNet_TCP_Accept: %s. No client found.\n", SDLNet_GetError());
-		if(NM_debug){std::cout<<"No client response..."<<std::endl;}
+		//if(NM_debug){std::cout<<"No client response..."<<std::endl;}
 	}
 	else{
 		/* Now we can communicate with the client using peerSocket
 		* serverSocket will remain opened waiting other connections */
-	
+		if(NM_debug){std::cout<<"Received TCP connection request."<<std::endl;}
 		/* Get the remote address */
 		if ((remoteIP = SDLNet_TCP_GetPeerAddress(peerSocket))){
 			/* Print the address, converting in the host format */
-			printf("Host connected: %x %d\n", SDLNet_Read32(&remoteIP->host), SDLNet_Read16(&remoteIP->port));
+			if(NM_debug){std::cout<<"Connected successfully to client at "<<intToIpAddr(remoteIP->host)<<":"<<SDLNet_Read16(&remoteIP->port)<<""<<std::endl;}
+			//printf("Host connected: %x %d\n", SDLNet_Read32(&remoteIP->host), SDLNet_Read16(&remoteIP->port));
+			int numSocketsInSet = SDLNet_TCP_AddSocket(socketSet, peerSocket); //add peerSocket to socketSet
+			
+			isServer=true;
+			connectionOpen = true;
+		
 		}
 		else{
 			fprintf(stderr, "SDLNet_TCP_GetPeerAddress: %s\n", SDLNet_GetError());
-			
 		}
-		
-		SDLNet_TCP_AddSocket(socketSet, peerSocket); //add peerSocket to socketSet
-		if(NM_debug){std::cout<<"Client Found. Opening Connection."<<std::endl;}
-		isServer=true;
-		connectionOpen = true;
 	
 	}
 	
@@ -370,7 +383,10 @@ bool NetworkManager::sendPacket(gameUpdate update){
 	int numBytesSent = SDLNet_TCP_Send(peerSocket, byteArray, sizeof(update));
 	
 	if(numBytesSent == sizeof(update)){
-		//if(NM_debug){std::cout<<"Success. Exiting sendPacket()."<<std::endl;}
+		if(NM_debug && packetsReceived%1000 == 0){
+			std::cout<<"Sent "<<packetsSent+1<<" packets so far."<<std::endl;
+		}
+		packetsSent++;
 		return true;
 	}
 	std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
@@ -403,6 +419,13 @@ void NetworkManager::readPacketToBuffer(){
 		if(NM_debug){std::cout<<"Connection closed by peer."<<std::endl;}
 		std::cout<<"Exiting readPacket()."<<std::endl;
 		return;
+	}
+	else if(numBytesReceived == sizeof(gameUpdate)){
+		if(NM_debug && packetsReceived%1000 == 0){
+			std::cout<<"Received "<<packetsReceived+1<<" packets so far."<<std::endl;
+		}
+		
+		packetsReceived++;
 	}
 	//if(NM_debug){std::cout<<"Exiting readPacket()."<<std::endl;}
 }

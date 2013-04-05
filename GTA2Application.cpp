@@ -59,7 +59,8 @@ static bool mute = false;
 static bool paused = false;
 
 gameUpdate* multiUpdate;
-
+float timeSinceLastPacket = 0;
+float millisecondsBetweenPackets = 10.0;
 
 //-------------------------------------------------------------------------------------
 GTA2Application::GTA2Application(void)
@@ -172,9 +173,9 @@ void GTA2Application::createScene(void)
  	isMultiplayer = true;
  	
  	//Debugging delete later
- 	isServer = true;
+ 	//isServer = true;
 
-/* 	bool connectionOpen = network_manager->isConnectionOpen();	
+ 	bool connectionOpen = network_manager->isConnectionOpen();	
  	isServer = network_manager->isThisServer();
  	
  	if(isMultiplayer && isServer && !connectionOpen) {
@@ -185,7 +186,7 @@ void GTA2Application::createScene(void)
  	if(isMultiplayer && !connectionOpen) {
  		isMultiplayer=false;
  	}
-*/
+	cout<<"Current State: connectionOpen="<<boolalpha<<connectionOpen<<", isMutliplayer="<<isMultiplayer<<", isServer="<<isServer<<endl;
     // Create a ball
     ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer, isMultiplayer);
 
@@ -199,13 +200,13 @@ void GTA2Application::createScene(void)
     players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50"));
     
 	if(isMultiplayer) {
-    	cout << "HURF" << endl;
+    	//cout << "HURF" << endl;
     	players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50"));
     	multiUpdate = new gameUpdate;
     }
     
-    cout << players[0] << " :: " << players[0]->getRigidBody() << endl;
-    cout << players[1] << " :: " << players[1]->getRigidBody() << endl;
+    //cout << players[0] << " :: " << players[0]->getRigidBody() << endl;
+    //cout << players[1] << " :: " << players[1]->getRigidBody() << endl;
     
 	sound_manager->playBackground(-1);
     
