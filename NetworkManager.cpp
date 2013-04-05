@@ -134,16 +134,21 @@ bool NetworkManager::checkForServer(){
 		int errorCode = SDLNet_UDP_Recv(UdpSocket, packet);
 		
 		if(errorCode == 1){
-			//success, copy UDP packet data to local packet data
+			//successfully recieved UDP packet, copy packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
-			if(NM_debug){std::cout<<"Server packet recieved."<<std::endl;}
+			if(NM_debug){std::cout<<"Packet recieved."<<std::endl;}
 			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<packetData.port<<std::endl;}
 			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<packet->address.port<<std::endl;}
 			packetData.host = packet->address.host;
 			packetData.port = PORT_NUM;
-			serverFound=true;
+			if(packetData.port == PORT_NUM || packet->address.port == PORT_NUM){
+				if(NM_debug){std::cout<<"Packet is server packet."<<std::endl;}
+				serverFound=true;
+			} else{
+				if(NM_debug){std::cout<<"Packet is garbage."<<std::endl;}
+			}
 		}
-		else{
+		if(!serverFound){
 			count++;
 			usleep(1000); //sleep for 1000 microseconds = 1 millisecond
 		}
@@ -172,6 +177,8 @@ bool NetworkManager::checkForServer(){
 		
 		//this damn line keeps causing segfaults...
 		//int errorCode = SDLNet_ResolveHost(remoteIP, ipAddr, PORT_NUM);
+		
+		
 		
 		int errorCode = 0;
 		
