@@ -189,11 +189,11 @@ bool NetworkManager::checkForServer(){
 			//successfully recieved UDP packet, copy packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			if(NM_debug){std::cout<<"Packet recieved."<<std::endl;}
-			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host, true)<<", packetData.port="<<packetData.port<<std::endl;}
-			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host, true)<<", packet.port="<<packet->address.port<<std::endl;}
-			packetData.host = packet->address.host;
-			packetData.port = packet->address.port;
-			if(packetData.port == PORT_NUM || packet->address.port == PORT_NUM){
+			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host, true)<<", packetData.port="<<SDLNet_Read16(&packetData.port)<<std::endl;}
+			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host, true)<<", packet.port="<<SDLNet_Read16(&packet->address.port)<<std::endl;}
+			//packetData.host = packet->address.host;
+			//packetData.port = packet->address.port;
+			if(SDLNet_Read16(&packetData.port)== PORT_NUM){
 				if(NM_debug){std::cout<<"Packet is server packet."<<std::endl;}
 				serverFound=true;
 			} else{
@@ -212,17 +212,17 @@ bool NetworkManager::checkForServer(){
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 		//if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
 		
-		intToIpAddr(packet->address.host, true);
+		char* ipAddr=intToIpAddr(packet->address.host, true);
 		//char* serverIP = conversion;
-		if(conversion == NULL){
+		if(ipAddr == NULL){
 			std::cout<<"Error: conversion error"<<std::endl;
 		}else{
 			
-			std::cout<<"serverIP:"<<conversion<<std::endl;
+			std::cout<<"serverIP:"<<ipAddr<<std::endl;
 		}
 		//if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
 		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
-		char* ipAddr=intToIpAddr(packet->address.host, true);
+		//char* ipAddr=intToIpAddr(packet->address.host, true);
 		//std::cout<<"result of intToIpAddr:"<<ipAddr<<std::endl;
 		
 		
@@ -232,20 +232,28 @@ bool NetworkManager::checkForServer(){
 		
 		
 		
-		int errorCode = 0;
+		//int errorCode = 0;
 		
 		
-		if(errorCode != 0){ 
+		/*if(errorCode != 0){ 
 			//failure
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return false;
-		}
+		}*/
 		if(NM_debug){std::cout<<"opening TCP connection with server"<<std::endl;}
 		peerSocket = SDLNet_TCP_Open(&packetData); //open TCP connection with the server
 	
 		if(peerSocket == NULL){
-			std::cout<<"Error: could not open connection with server"<<std::endl;
-			return false;
+			std::cout<<"Error: could not open connection with server from packet data"<<std::endl;
+			packetData.host = packet->address.host;
+			packetData.port = packet->address.port;
+			
+			peerSocket = SDLNet_TCP_Open(&packetData);
+			
+			if(peerSocket == NULL){
+				std::cout<<"Error: could not open connection with server from packet metadata"<<std::endl;
+				return false;
+			}
 		}
 	
 		//add peerSocket to socketSet
