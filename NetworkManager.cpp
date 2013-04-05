@@ -341,7 +341,7 @@ void NetworkManager::checkForClient(){
 }
 
 bool NetworkManager::checkForPackets(){
-	if(NM_debug){std::cout<<"Entering checkForPackets()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Entering checkForPackets()."<<std::endl;}
 	bool retVal=false;
 	if(connectionOpen){
 		//check for activity with 0 millisecond timeout
@@ -357,20 +357,20 @@ bool NetworkManager::checkForPackets(){
 			std::cout<<"Error: more than 1 socket with activity."<<std::endl;	
 		}
 	}
-	if(NM_debug){std::cout<<"Exiting checkForClients()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Exiting checkForPackets()."<<std::endl;}
 	return retVal;
 }
 
 
 bool NetworkManager::sendPacket(gameUpdate update){	
-	if(NM_debug){std::cout<<"Entering sendPacket()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Entering sendPacket()."<<std::endl;}
 
 	char* byteArray = static_cast<char*>(static_cast<void*>(&update)); //cast gameUpdate to byteArray
 	
 	int numBytesSent = SDLNet_TCP_Send(peerSocket, byteArray, sizeof(update));
 	
 	if(numBytesSent == sizeof(update)){
-		if(NM_debug){std::cout<<"Exiting sendPacket()."<<std::endl;}
+		//if(NM_debug){std::cout<<"Success. Exiting sendPacket()."<<std::endl;}
 		return true;
 	}
 	std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
@@ -384,14 +384,14 @@ gameUpdate* NetworkManager::getGameUpdate(){
 
 
 void NetworkManager::readPacketToBuffer(){
-	if(NM_debug){std::cout<<"Entering readPacketToBuffer()"<<std::endl;}
+	//if(NM_debug){std::cout<<"Entering readPacketToBuffer()"<<std::endl;}
 	//blocking call, only call readPacket if you *know* a packet has been received
 	int numBytesReceived = SDLNet_TCP_Recv(peerSocket, buffer, sizeof(buffer)-1); 
 
 	if(numBytesReceived == -1){
 		//error
 		std::cout<< SDLNet_GetError() <<std::endl;
-		std::cout<<"Exiting readPacket()."<<std::endl;
+		std::cout<<"Exiting readPacketToBuffer()."<<std::endl;
 		return;
 	}
 	else if(numBytesReceived == 0){
@@ -404,7 +404,7 @@ void NetworkManager::readPacketToBuffer(){
 		std::cout<<"Exiting readPacket()."<<std::endl;
 		return;
 	}
-	if(NM_debug){std::cout<<"Exiting readPacket()."<<std::endl;}
+	//if(NM_debug){std::cout<<"Exiting readPacket()."<<std::endl;}
 }
 
 NetworkManager::~NetworkManager() {
