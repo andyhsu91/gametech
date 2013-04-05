@@ -20,8 +20,8 @@ class Ball
 public:
     Ball(void);
     virtual ~Ball(void);
-	void initBall(Ogre::SceneManager* pSceneMgr, 
-		PhysicsSimulator* sim, SoundManager* sm, Score* sc, bool isServer);
+	void initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
+		SoundManager* sm, Score* sc, bool isServer, bool isMultiplayer);
 	void resetBall(btVector3 ballPos);
 	void updateBallPos(btVector3 ballPos);
 	void incrementBallType();
@@ -44,6 +44,8 @@ private:
 	
 	Ogre::SceneNode* ballNode;
 	btRigidBody* ball;
+	
+	bool isMulti;
 };
 
 #endif // #ifndef __Ball_h_

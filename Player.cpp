@@ -14,15 +14,10 @@ Filename:    Player.cpp
 
 using namespace std;
 
-static int edgeSize = 500;
+int edgeSize = 500;
 
-static double paddleModifier = 400.0f;
-static double paddleScale = 0.75f;
-
-static bool padDirect[4] = {false};
-gameUpdate* mPlayerState;
-
-bool forceUpdate;
+double paddleModifier = 400.0f;
+double paddleScale = 0.75f;
  
 
 Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
@@ -33,12 +28,18 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
 	
-	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity"+ node, "cube.mesh");
+	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity" + node, "cube.mesh");
    	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
   		createChildSceneNode(node);
 		
 	Ogre::Vector3 shapeDim = Ogre::Vector3(edgeSize/5, edgeSize/5, 0.01);
-   	Ogre::Vector3 position = Ogre::Vector3(0, 0, edgeSize/2);
+   	
+   	int size = edgeSize/2;
+   	
+   	if(color.compare("Examples/Red50") != 0) {
+   		size = -size;
+   	}
+   	Ogre::Vector3 position = Ogre::Vector3(0, 0, size);
 		
 	snode->attachObject(ent);
 	snode->scale(shapeDim.x/100, shapeDim.y/100, shapeDim.z);
@@ -53,6 +54,11 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	paddle->setActivationState(DISABLE_DEACTIVATION);
 	
 	mPlayerState = new gameUpdate; //allocating mem on heap
+	
+	mPlayerState->paddleDir[0] = false;
+	mPlayerState->paddleDir[1] = false;
+	mPlayerState->paddleDir[2] = false;
+	mPlayerState->paddleDir[3] = false;
 
 }
 //---------------------------------------------------------------------------
@@ -84,7 +90,6 @@ void Player::updatePosition(const Ogre::FrameEvent& evt)
 	}
 	if( mPlayerState->paddleDir[PAD_UP] )
 	{
-
 		if(pos.getY() < edgeSize/2)
 			pos.setY(pos.getY() + movement_spd);
 	}
@@ -93,13 +98,14 @@ void Player::updatePosition(const Ogre::FrameEvent& evt)
 		if(pos.getY() > -edgeSize/2)
 			pos.setY(pos.getY() - movement_spd);
 	}
-	
+		
 	if(forceUpdate) {
 		pos.setX(mPlayerState->paddlePos[0]);
 		pos.setY(mPlayerState->paddlePos[1]);
-		pos.setZ(mPlayerState->paddlePos[2]);	
+		pos.setZ(mPlayerState->paddlePos[2]);
+		forceUpdate = false;	
 	}
-	
+
 	trans.setOrigin(pos);
 	paddle->getMotionState()->setWorldTransform(trans);
 	

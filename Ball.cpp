@@ -29,8 +29,8 @@ Ball::~Ball(void)
 	if(mBallState){delete mBallState;}
 }
 //---------------------------------------------------------------------------
-void Ball::initBall(Ogre::SceneManager* pSceneMgr, 
-	PhysicsSimulator* sim, SoundManager* sm, Score* sc, bool isServer)
+void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
+	SoundManager* sm, Score* sc, bool isServer, bool isMultiplayer)
 {
 	mBallState = new gameUpdate; //safe
 	
@@ -38,6 +38,7 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr,
 	bullet = sim;
 	sound_manager = sm;
 	score = sc;
+	isMulti = isMultiplayer;
 	cooldownMax = 20.0;
 	
 	// Create an Entity
@@ -135,6 +136,8 @@ void Ball::updateBallPos(btVector3 ballPos){
 		if(cooldown.getX()==0.0){
 			sound_manager->playBounce();
 			score->incrementScore();
+			
+			if(isMulti) { score->incrementSecondScore(); }
 		}
 		cooldown.setX(cooldownMax);
 		
@@ -146,6 +149,8 @@ void Ball::updateBallPos(btVector3 ballPos){
 			if(yDir==1.0 && currBallDir.getY() == -1.0){
 				sound_manager->playBounce();
 				score->incrementScore();
+				
+				if(isMulti) { score->incrementSecondScore(); }
 			}
 		}
 		cooldown.setY(cooldownMax);
@@ -157,6 +162,8 @@ void Ball::updateBallPos(btVector3 ballPos){
 		if(cooldown.getZ()==0.0){
 			sound_manager->playBounce();
 			score->incrementScore();
+			
+			if(isMulti) { score->incrementSecondScore(); }
 		}
 		cooldown.setZ(cooldownMax);
 	}
@@ -211,9 +218,17 @@ void Ball::update()
 	{
 		resetBall(ballPos);
 		
-		if(score->resetScore()) {
-			sound_manager->playFailure();
+		if(ballPos.getZ() > edgeSize*1.01) {
+			if(score->resetScore()) {
+				sound_manager->playFailure();
+			}	
 		}
+		
+		if(ballPos.getZ() < -edgeSize*1.01) {
+			score->resetSecondScore();
+			sound_manager->playSuccess();
+		}
+		
 	} 
 }
 void Ball::update(gameUpdate* update)
@@ -231,8 +246,15 @@ void Ball::update(gameUpdate* update)
 	{
 		resetBall(ballPos);
 		
-		if(score->resetScore()) {
-			sound_manager->playFailure();
+		if(ballPos.getZ() > edgeSize*1.01) {
+			if(score->resetScore()) {
+				sound_manager->playFailure();
+			}	
+		}
+		
+		if(ballPos.getZ() < -edgeSize*1.01) {
+			score->resetSecondScore();
+			sound_manager->playSuccess();
 		}
 	} 
 }

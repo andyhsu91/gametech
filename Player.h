@@ -28,9 +28,11 @@ public:
 private:
 	Ogre::SceneManager* mSceneMgr;
 	PhysicsSimulator* bullet;
-	
 	btRigidBody* paddle;
 	btTransform trans;
+	
+	gameUpdate* mPlayerState;
+	bool forceUpdate;
 };
 
 #endif // #ifndef __Player_h_

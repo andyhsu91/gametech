@@ -43,12 +43,19 @@ static Score score;
 bool isMultiplayer;
 bool isServer;
 
-static char scoreString[16];
 static char highScoreString[32];
-CEGUI::Window *scorePointer;
+static char highScoreName[32];
+CEGUI::Window *highName;
 CEGUI::Window *highScore;
+
+static char scoreString[16];
+CEGUI::Window *scorePointer;
+
+static char score2String[16];
+CEGUI::Window *score2Pointer;
+
 static bool mouseCam = true;
-static bool mute=false;
+static bool mute = false;
 static bool paused = false;
 
 gameUpdate* multiUpdate;
@@ -101,12 +108,22 @@ void GTA2Application::createScene(void)
  
     //CEGUI::Window *quit = scorePointer;
 	scorePointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/ScoreButton");
-	sprintf(scoreString, "SCORE: %d", score.getScore());
+	sprintf(scoreString, "MY SCORE: %d", score.getScore());
     scorePointer->setText(scoreString);
     scorePointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	scorePointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.85f, 0))); 	
+	scorePointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.80f, 0))); 	
 
     sheet->addChildWindow(scorePointer);
+    CEGUI::System::getSingleton().setGUISheet(sheet);
+    
+    //Second player score
+    score2Pointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/Score2Button");
+	sprintf(score2String, "HIS SCORE: %d", score.getSecondScore());
+    score2Pointer->setText(scoreString);
+    score2Pointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+	score2Pointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.85f, 0))); 	
+
+    sheet->addChildWindow(score2Pointer);
     CEGUI::System::getSingleton().setGUISheet(sheet);
     
     //High score display
@@ -114,12 +131,22 @@ void GTA2Application::createScene(void)
     sprintf(highScoreString, "HI-SCORE: %d", score.getMaxScore());
   	highScore->setText(highScoreString);
     highScore->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	highScore->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.80f, 0))); 	
+	highScore->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.75f, 0))); 	
 
     sheet->addChildWindow(highScore);
     CEGUI::System::getSingleton().setGUISheet(sheet);
+    
+    //High score name display
+    highName = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/HighNameButton");
+    sprintf(highScoreName, "ON TOP: %s", score.getTopPlayer());
+  	highName->setText(highScoreString);
+    highName->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+	highName->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.70f, 0))); 	
 
-	
+    sheet->addChildWindow(highName);
+    CEGUI::System::getSingleton().setGUISheet(sheet);
+    
+	//Quit button
 	CEGUI::Window *quit = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
     quit->setText("QUIT");
     quit->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
@@ -143,34 +170,43 @@ void GTA2Application::createScene(void)
  	//Initialize Network Manager
  	network_manager = new NetworkManager();
  	isMultiplayer = true;
- 	bool connectionOpen = network_manager->isConnectionOpen();	
+ 	
+ 	//Debugging delete later
+ 	isServer = true;
+
+/* 	bool connectionOpen = network_manager->isConnectionOpen();	
  	isServer = network_manager->isThisServer();
  	
- 	if(isMultiplayer && isServer && !connectionOpen){
+ 	if(isMultiplayer && isServer && !connectionOpen) {
  		network_manager->waitForClientConnection();
  		connectionOpen=network_manager->isConnectionOpen();	
  	}
- 	if(isMultiplayer && !connectionOpen){
+ 	
+ 	if(isMultiplayer && !connectionOpen) {
  		isMultiplayer=false;
  	}
+*/
     // Create a ball
-    ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer);
+    ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer, isMultiplayer);
 
     // Create a Light and set its position
     Ogre::Light* light = mSceneMgr->createLight("MainLight");
     light->setPosition(20.0f, 80.0f, 50.0f);
 	
-	env.initEnvironment(mSceneMgr, &bullet);
+	env.initEnvironment(mSceneMgr, &bullet, isMultiplayer);
    
     //PADDLE ------------------------------------------------------------------
     players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50"));
     
-    if(isMultiplayer) {
+	if(isMultiplayer) {
     	cout << "HURF" << endl;
     	players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50"));
     	multiUpdate = new gameUpdate;
     }
-   
+    
+    cout << players[0] << " :: " << players[0]->getRigidBody() << endl;
+    cout << players[1] << " :: " << players[1]->getRigidBody() << endl;
+    
 	sound_manager->playBackground(-1);
     
 	cout<<"SCENE CREATED"<<endl;
@@ -184,14 +220,18 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     mKeyboard->capture();
     mMouse->capture();
 	
-	sprintf (scoreString, "SCORE: %d", score.getScore());
+	sprintf (scoreString, "MY SCORE: %d", score.getScore());
+	sprintf (score2String, "HIS SCORE: %d", score.getSecondScore());
 	sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
+	sprintf (highScoreName, "ON TOP: %s", score.getTopPlayer());
 	scorePointer->setText(scoreString);
 	highScore->setText(highScoreString);
+	score2Pointer->setText(score2String);
+	highName->setText(highScoreName);
 
 	if (!paused)
 	{
-		if(isMultiplayer) {
+/*		if(isMultiplayer) {
 			if(isServer) {
 				bullet.updateWorld(evt);
 				ball.update();
@@ -250,11 +290,14 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				network_manager->sendPacket(*multiUpdate);			
 			}				
 		} 
-		else {
+		else { */
 			bullet.updateWorld(evt);
 			ball.update();
 			players[0]->updatePosition(evt);
-		}
+			
+			//Debugging only, delete next line
+			players[1]->updatePosition(evt);
+	//	}
 
 		if(mWindow->isClosed() || mShutDown)
 		    return false;
@@ -281,6 +324,21 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
     case OIS::KC_ESCAPE: 
         mShutDown = true;
         break;
+        
+    //Debugging second player, delete when done
+    case OIS::KC_L:
+        players[1]->updatePadDirection(PAD_RIGHT, true);
+        break;
+    case OIS::KC_J:
+    	players[1]->updatePadDirection(PAD_LEFT, true);
+        break;  
+    case OIS::KC_I:
+	    players[1]->updatePadDirection(PAD_UP, true);
+        break;    
+    case OIS::KC_K:
+    	players[1]->updatePadDirection(PAD_DOWN, true);
+        break; 
+        
     case OIS::KC_D:
         players[0]->updatePadDirection(PAD_RIGHT, true);
         break;
@@ -293,6 +351,7 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
     case OIS::KC_S:
     	players[0]->updatePadDirection(PAD_DOWN, true);
         break;
+         
 	case OIS::KC_C:
 		mouseCam = !mouseCam;
 		break;
@@ -312,6 +371,21 @@ bool GTA2Application::keyReleased( const OIS::KeyEvent& evt )
 {
 	switch (evt.key)
     {
+    
+    //Debugging second player, delete when done
+    case OIS::KC_L:
+        players[1]->updatePadDirection(PAD_RIGHT, false);
+        break;
+    case OIS::KC_J:
+    	players[1]->updatePadDirection(PAD_LEFT, false);
+        break;  
+    case OIS::KC_I:
+	    players[1]->updatePadDirection(PAD_UP, false);
+        break;    
+    case OIS::KC_K:
+    	players[1]->updatePadDirection(PAD_DOWN, false);
+        break; 
+        
     case OIS::KC_D:
     	players[0]->updatePadDirection(PAD_RIGHT, false);
         break;
@@ -323,7 +397,8 @@ bool GTA2Application::keyReleased( const OIS::KeyEvent& evt )
         break;    
     case OIS::KC_S:
     	players[0]->updatePadDirection(PAD_DOWN, false);
-        break;            
+        break;
+                    
     default:
         break;
     }

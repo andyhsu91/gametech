@@ -16,7 +16,8 @@ Environment::~Environment(void)
 {	
 }
 //---------------------------------------------------------------------------
-void Environment::initEnvironment(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim)
+void Environment::initEnvironment(Ogre::SceneManager* 
+	pSceneMgr, PhysicsSimulator* sim, bool isMultiplayer)
 {
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
@@ -96,6 +97,7 @@ void Environment::initEnvironment(Ogre::SceneManager* pSceneMgr, PhysicsSimulato
     	bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);
     }
     //NegWall XY------------------------------------------------------------------
+    if(!isMultiplayer)
     {   	    
 		Ogre::Entity* ent = mSceneMgr->createEntity("NegXYEntity", "cube.mesh");
     	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
