@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 //modified from http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net#Server_side
 //	and http://r3dux.org/2011/01/a-simple-sdl_net-chat-server-client/
@@ -17,7 +21,7 @@
 //constants
 const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate);
-const unsigned int PORT_NUM = 57996; //chosen randomly from range 49,152 to 65,535
+const unsigned int PORT_NUM = 57996; //36066 in network byte order
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
 const int serverSearchTimeout = 3; //number of seconds to search for server
 bool NM_debug = true;
@@ -58,14 +62,19 @@ NetworkManager::NetworkManager() {
 			std::cout<<"Error: could not resolve host."<<std::endl;
 			return;
 		}
-	
+		
+		
 		serverSocket = SDLNet_TCP_Open(&myIp); //open a socket to listen for clients
 	
+		myIp.host = getMyIp();
+		
+		
 		if(serverSocket == NULL){
 			std::cout<<"Error: could not create server socket."<<std::endl;
 			return;
 		}
-	
+		
+		std::cout<<"Server has opened socket with IP: "<< intToIpAddr(myIp.host, true)<<" and Port: "<<myIp.port<<std::endl;
 		//add serverSocket to socketSet
 		//SDLNet_TCP_AddSocket(socketSet, serverSocket);
 		isServer=true;
@@ -87,13 +96,54 @@ bool NetworkManager::isThisServer(){
 	return isServer;
 }
 
-char*  NetworkManager::intToIpAddr(long ipAddress){
+int NetworkManager::getMyIp(){
+
+	//this is ghetto, shouldn't be doing this, but SDL_net does not provide this functionality for some reason.
+	
+	//write this computer's Ip address to myIp.txt
+	int retVal = system("/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > myIp.txt");
+	
+	//read myIp.txt to get it
+	std::string line;
+  	std::ifstream myfile;
+  	
+  	myfile.open("myIp.txt");
+  	
+  	bool gotString = false;
+  	
+	if (myfile.is_open() && myfile.good()){
+		std::getline(myfile,line);
+		myfile.close();
+		gotString = true;
+	}
+	
+	if(gotString){
+		
+		int retVal = inet_addr(line.c_str());
+		if(NM_debug){std::cout<<"ifconfig says myIp="<<line<<", converted to "<<retVal<<std::endl;}
+		return retVal;
+	}
+	else{
+		if(NM_debug){std::cout<<"Could not read file."<<line<<std::endl;}
+		return -1;
+	}
+}
+
+char*  NetworkManager::intToIpAddr(long ipAddress, bool networkByteOrder){
 	//if(NM_debug){std::cout<<"Entered intToIpAddr()"<<std::endl;}
 	char* ipAddr = new char[16]; //allocate it on heap
-    snprintf(ipAddr,16,"%lu.%lu.%lu.%lu" ,(ipAddress & 0xff000000) >> 24 
+    if(!networkByteOrder){
+    	snprintf(ipAddr,16,"%lu.%lu.%lu.%lu",(ipAddress & 0xff000000) >> 24 
                                                 ,(ipAddress & 0x00ff0000) >> 16
                                                 ,(ipAddress & 0x0000ff00) >> 8
                                                 ,(ipAddress & 0x000000ff));
+    }
+    else{
+    	snprintf(ipAddr,16,"%lu.%lu.%lu.%lu", (ipAddress & 0x000000ff)
+                                                ,(ipAddress & 0x0000ff00) >> 8
+                                                ,(ipAddress & 0x00ff0000) >> 16
+                                                ,(ipAddress & 0xff000000) >> 24);
+    }
   
 	std::cout<<"Converted "<<ipAddress<<" to "<<ipAddr<<std::endl;
 	
@@ -137,8 +187,8 @@ bool NetworkManager::checkForServer(){
 			//successfully recieved UDP packet, copy packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			if(NM_debug){std::cout<<"Packet recieved."<<std::endl;}
-			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<packetData.port<<std::endl;}
-			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<packet->address.port<<std::endl;}
+			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host, true)<<", packetData.port="<<packetData.port<<std::endl;}
+			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host, true)<<", packet.port="<<packet->address.port<<std::endl;}
 			packetData.host = packet->address.host;
 			packetData.port = PORT_NUM;
 			if(packetData.port == PORT_NUM || packet->address.port == PORT_NUM){
@@ -158,9 +208,9 @@ bool NetworkManager::checkForServer(){
 		//received UDP packet from server, so make connection as a client
 		if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
-		if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
+		//if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
 		
-		intToIpAddr(packet->address.host);
+		intToIpAddr(packet->address.host, true);
 		//char* serverIP = conversion;
 		if(conversion == NULL){
 			std::cout<<"Error: conversion error"<<std::endl;
@@ -168,10 +218,10 @@ bool NetworkManager::checkForServer(){
 			
 			std::cout<<"serverIP:"<<conversion<<std::endl;
 		}
-		if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
+		//if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
 		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
-		char* ipAddr=intToIpAddr(packet->address.host);
-		std::cout<<"result of intToIpAddr:"<<ipAddr<<std::endl;
+		char* ipAddr=intToIpAddr(packet->address.host, true);
+		//std::cout<<"result of intToIpAddr:"<<ipAddr<<std::endl;
 		
 		
 		
