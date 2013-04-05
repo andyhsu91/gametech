@@ -232,7 +232,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	if (!paused)
 	{
-/*		if(isMultiplayer) {
+		if(isMultiplayer) {
 			if(isServer) {
 				bullet.updateWorld(evt);
 				ball.update();
@@ -291,14 +291,14 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				network_manager->sendPacket(*multiUpdate);			
 			}				
 		} 
-		else { */
+		else { 
 			bullet.updateWorld(evt);
 			ball.update();
 			players[0]->updatePosition(evt);
 			
 			//Debugging only, delete next line
-			players[1]->updatePosition(evt);
-	//	}
+			//players[1]->updatePosition(evt);
+		}
 
 		if(mWindow->isClosed() || mShutDown)
 		    return false;
