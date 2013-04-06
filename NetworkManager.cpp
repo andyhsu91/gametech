@@ -189,7 +189,7 @@ bool NetworkManager::checkForServer(){
 			//successfully recieved UDP packet, copy packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
 			if(NM_debug){
-				std::cout<<"Packet recieved."<<std::endl;}
+				std::cout<<"Packet recieved."<<std::endl;
 				std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<SDLNet_Read16(&packetData.port)<<std::endl;
 				std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<SDLNet_Read16(&packet->address.port)<<std::endl;
 			}
