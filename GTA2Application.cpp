@@ -36,7 +36,7 @@ static int wallScale = 4;
 static PhysicsSimulator bullet;
 SoundManager* sound_manager;
 NetworkManager* network_manager;
-vector<Player*> players;
+vector<Player*> players;	//player[0] is me. player[1] is them
 static Environment env;
 static Ball ball;
 static Score score;
@@ -183,7 +183,7 @@ void GTA2Application::createScene(void)
  		connectionOpen=network_manager->isConnectionOpen();	
  	}
  	
- 	if(isMultiplayer && !connectionOpen) {
+ 	if(!connectionOpen) {
  		isMultiplayer=false;
  	}
 	cout<<"Current State: connectionOpen="<<boolalpha<<connectionOpen<<", isMutliplayer="<<isMultiplayer<<", isServer="<<isServer<<endl;
@@ -233,7 +233,12 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	if (!paused)
 	{
 		if(isMultiplayer) {
+			
+			//check for packets and read them to buffer
+			bool newPacketReceived = network_manager->checkForPackets();
+			
 			if(isServer) {
+				//I am server
 				bullet.updateWorld(evt);
 				ball.update();
 				players[0]->updatePosition(evt);
@@ -260,22 +265,25 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				
 				network_manager->sendPacket(*multiUpdate);
 
-				if(network_manager->checkForPackets()) 
+				if(newPacketReceived){
 					players[1]->updatePosition(evt, network_manager->getGameUpdate());
-				else
+				}
+				else{
 					players[1]->updatePosition(evt);
+				}
 					
 			} 
 			else {
+				//I am client
 				players[0]->updatePosition(evt);
 				
-				if(network_manager->checkForPackets()) {
+				if(newPacketReceived){
 					players[1]->updatePosition(evt, network_manager->getGameUpdate());
 					ball.update(network_manager->getGameUpdate());	
 				}
-				else
+				else{
 					players[1]->updatePosition(evt);
-					
+				}
 				
 				gameUpdate* clientState = players[0]->getPlayerGameState();
 				
@@ -292,6 +300,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			}				
 		} 
 		else { 
+			//single player mode
 			bullet.updateWorld(evt);
 			ball.update();
 			players[0]->updatePosition(evt);
