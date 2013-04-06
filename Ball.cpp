@@ -52,7 +52,8 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
     ballz->setMaterialName("Examples/DANBO");
    	ballz->setCastShadows(true);
     
-    float mass = isServer ? 100.0 : 0.0;
+    //float mass = isServer ? 100.0 : 0.0;
+    float mass = 100.0;
     
     //change this line for danbo vs sphere
     Ogre::Vector3 dim = 1*ballNode->getScale();
