@@ -55,10 +55,10 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	
 	mPlayerState = new gameUpdate; //allocating mem on heap
 	
-	mPlayerState->paddleDir[0] = false;
-	mPlayerState->paddleDir[1] = false;
-	mPlayerState->paddleDir[2] = false;
-	mPlayerState->paddleDir[3] = false;
+	mPlayerState->paddleDir[PAD_UP] = false;
+	mPlayerState->paddleDir[PAD_DOWN] = false;
+	mPlayerState->paddleDir[PAD_LEFT] = false;
+	mPlayerState->paddleDir[PAD_RIGHT] = false;
 
 }
 //---------------------------------------------------------------------------

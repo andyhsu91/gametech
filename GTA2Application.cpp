@@ -90,75 +90,6 @@ void GTA2Application::createCamera(void)
 //-------------------------------------------------------------------------------------
 void GTA2Application::createScene(void)
 {
-
-	// Set up CEGUI stuff
-	mRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
- 
-    CEGUI::Imageset::setDefaultResourceGroup("Imagesets");
-    CEGUI::Font::setDefaultResourceGroup("Fonts");
-    CEGUI::Scheme::setDefaultResourceGroup("Schemes");
-    CEGUI::WidgetLookManager::setDefaultResourceGroup("LookNFeel");
-    CEGUI::WindowManager::setDefaultResourceGroup("Layouts");
- 
-    CEGUI::SchemeManager::getSingleton().create("TaharezLook.scheme");
- 
-    CEGUI::System::getSingleton().setDefaultMouseCursor("TaharezLook", "MouseArrow");
- 
-    CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
-    CEGUI::Window *sheet = wmgr.createWindow("DefaultWindow", "CEGUIDemo/Sheet");
- 
-    //CEGUI::Window *quit = scorePointer;
-	scorePointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/ScoreButton");
-	sprintf(scoreString, "MY SCORE: %d", score.getScore());
-    scorePointer->setText(scoreString);
-    scorePointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	scorePointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.80f, 0))); 	
-
-    sheet->addChildWindow(scorePointer);
-    CEGUI::System::getSingleton().setGUISheet(sheet);
-    
-    //Second player score
-    score2Pointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/Score2Button");
-	sprintf(score2String, "HIS SCORE: %d", score.getSecondScore());
-    score2Pointer->setText(scoreString);
-    score2Pointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	score2Pointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.85f, 0))); 	
-
-    sheet->addChildWindow(score2Pointer);
-    CEGUI::System::getSingleton().setGUISheet(sheet);
-    
-    //High score display
-    highScore = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/HighScoreButton");
-    sprintf(highScoreString, "HI-SCORE: %d", score.getMaxScore());
-  	highScore->setText(highScoreString);
-    highScore->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	highScore->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.75f, 0))); 	
-
-    sheet->addChildWindow(highScore);
-    CEGUI::System::getSingleton().setGUISheet(sheet);
-    
-    //High score name display
-    highName = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/HighNameButton");
-    sprintf(highScoreName, "ON TOP: %s", score.getTopPlayer());
-  	highName->setText(highScoreString);
-    highName->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	highName->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.70f, 0))); 	
-
-    sheet->addChildWindow(highName);
-    CEGUI::System::getSingleton().setGUISheet(sheet);
-    
-	//Quit button
-	CEGUI::Window *quit = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
-    quit->setText("QUIT");
-    quit->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-	quit->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.9f, 0))); 	
-
-    sheet->addChildWindow(quit);
-    CEGUI::System::getSingleton().setGUISheet(sheet);
-	
-	quit->subscribeEvent(CEGUI::PushButton::EventClicked,
-    CEGUI::Event::Subscriber(&GTA2Application::quit, this));
-
 	//Initialize bullet
 	bullet.initPhysics(mSceneMgr);
 	
@@ -205,6 +136,86 @@ void GTA2Application::createScene(void)
     	multiUpdate = new gameUpdate;
     }
     
+	// Set up CEGUI stuff
+	mRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
+ 
+    CEGUI::Imageset::setDefaultResourceGroup("Imagesets");
+    CEGUI::Font::setDefaultResourceGroup("Fonts");
+    CEGUI::Scheme::setDefaultResourceGroup("Schemes");
+    CEGUI::WidgetLookManager::setDefaultResourceGroup("LookNFeel");
+    CEGUI::WindowManager::setDefaultResourceGroup("Layouts");
+ 
+    CEGUI::SchemeManager::getSingleton().create("TaharezLook.scheme");
+ 
+    CEGUI::System::getSingleton().setDefaultMouseCursor("TaharezLook", "MouseArrow");
+ 
+    CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
+    CEGUI::Window *sheet = wmgr.createWindow("DefaultWindow", "CEGUIDemo/Sheet");
+
+    float highscoreplacement = 0.75;
+    float hostscoreplacement = 0.80;
+
+    if(isMultiplayer)
+    {
+    
+    	highscoreplacement = 0.65;
+    	hostscoreplacement = 0.75;
+    	
+    	//High score name display
+	    highName = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/HighNameButton");
+	    sprintf(highScoreName, "ON TOP: %s", score.getTopPlayer());
+	  	highName->setText(highScoreString);
+	    highName->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+		highName->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.60f, 0))); 	
+
+	    sheet->addChildWindow(highName);
+	    CEGUI::System::getSingleton().setGUISheet(sheet);
+	    
+    	//Second player score
+    	score2Pointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/Score2Button");
+		sprintf(score2String, "HIS SCORE: %d", score.getSecondScore());
+    	score2Pointer->setText(scoreString);
+    	score2Pointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+		score2Pointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.80f, 0))); 	
+
+    	sheet->addChildWindow(score2Pointer);
+    	CEGUI::System::getSingleton().setGUISheet(sheet);
+    	
+	}
+	
+	//High score display
+    highScore = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/HighScoreButton");
+    sprintf(highScoreString, "HI-SCORE: %d", score.getMaxScore());
+  	highScore->setText(highScoreString);
+    highScore->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+	highScore->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(highscoreplacement, 0))); 	
+
+    sheet->addChildWindow(highScore);
+    CEGUI::System::getSingleton().setGUISheet(sheet);
+    
+	//Own score
+	scorePointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/ScoreButton");
+	sprintf(scoreString, "MY SCORE: %d", score.getScore());
+    scorePointer->setText(scoreString);
+    scorePointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+	scorePointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(hostscoreplacement, 0))); 	
+
+    sheet->addChildWindow(scorePointer);
+    CEGUI::System::getSingleton().setGUISheet(sheet);
+    
+	//Quit button
+	CEGUI::Window *quit = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
+    quit->setText("QUIT");
+    quit->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+	quit->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.9f, 0))); 	
+
+    sheet->addChildWindow(quit);
+    CEGUI::System::getSingleton().setGUISheet(sheet);
+	
+	quit->subscribeEvent(CEGUI::PushButton::EventClicked,
+    CEGUI::Event::Subscriber(&GTA2Application::quit, this));
+
+	
     //cout << players[0] << " :: " << players[0]->getRigidBody() << endl;
     //cout << players[1] << " :: " << players[1]->getRigidBody() << endl;
     
@@ -275,7 +286,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			} 
 			else {
 				//I am client
-				players[0]->updatePosition(evt);
+				players[0]->updatePosition(evt); //update myself normally
 				
 				if(newPacketReceived){
 					players[1]->updatePosition(evt, network_manager->getGameUpdate());
@@ -287,14 +298,14 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				
 				gameUpdate* clientState = players[0]->getPlayerGameState();
 				
-				multiUpdate->paddlePos[0] = clientState->paddlePos[0];
-				multiUpdate->paddlePos[1] = clientState->paddlePos[1];
-				multiUpdate->paddlePos[2] = clientState->paddlePos[2];
+				multiUpdate->paddlePos[0] = -clientState->paddlePos[0];
+				multiUpdate->paddlePos[1] =  clientState->paddlePos[1];
+				multiUpdate->paddlePos[2] = -clientState->paddlePos[2];
 				
-				multiUpdate->paddleDir[0] = clientState->paddleDir[0];
-				multiUpdate->paddleDir[1] = clientState->paddleDir[1];
-				multiUpdate->paddleDir[2] = clientState->paddleDir[2];
-				multiUpdate->paddleDir[3] = clientState->paddleDir[3];
+				multiUpdate->paddleDir[PAD_UP]    =  clientState->paddleDir[PAD_UP];
+				multiUpdate->paddleDir[PAD_DOWN]  =  clientState->paddleDir[PAD_DOWN];
+				multiUpdate->paddleDir[PAD_LEFT]  =  clientState->paddleDir[PAD_RIGHT];
+				multiUpdate->paddleDir[PAD_RIGHT] =  clientState->paddleDir[PAD_LEFT];
 				
 				network_manager->sendPacket(*multiUpdate);			
 			}				
