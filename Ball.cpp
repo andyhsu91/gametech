@@ -138,6 +138,34 @@ void Ball::randomizeStartVelocity(void)
 	
 }
 
+void Ball::update()
+{	//this function decides whether 
+	btTransform ballTrans;
+	ball->getMotionState()->getWorldTransform(ballTrans);
+	btVector3 ballPos = ballTrans.getOrigin();
+	
+	updateBallPos(ballPos);
+	
+	if( abs(ballPos.getX()) > edgeSize*1.01 ||
+		abs(ballPos.getY()) > edgeSize*1.01 ||
+		abs(ballPos.getZ()) > edgeSize*1.01	)
+	{
+		resetBall(ballPos);
+		
+		if(ballPos.getZ() > edgeSize*1.01) {
+			if(score->resetServerScore()) {
+				sound_manager->playFailure();
+			}	
+		}
+		
+		if(ballPos.getZ() < -edgeSize*1.01) {
+			score->resetClientScore();
+			sound_manager->playSuccess();
+		}
+		
+	} 
+}
+
 void Ball::updateBallPos(btVector3 ballPos){
 	//this function does not update bullet, it only checks for score updates or bounces
 	
@@ -209,33 +237,7 @@ void Ball::updateBallPos(btVector3 ballPos){
     mBallState->ballPos[2] = currBallPos.getZ();
 }
 
-void Ball::update()
-{	//this function decides whether 
-	btTransform ballTrans;
-	ball->getMotionState()->getWorldTransform(ballTrans);
-	btVector3 ballPos = ballTrans.getOrigin();
-	
-	updateBallPos(ballPos);
-	
-	if( abs(ballPos.getX()) > edgeSize*1.01 ||
-		abs(ballPos.getY()) > edgeSize*1.01 ||
-		abs(ballPos.getZ()) > edgeSize*1.01	)
-	{
-		resetBall(ballPos);
-		
-		if(ballPos.getZ() > edgeSize*1.01) {
-			if(score->resetServerScore()) {
-				sound_manager->playFailure();
-			}	
-		}
-		
-		if(ballPos.getZ() < -edgeSize*1.01) {
-			score->resetClientScore();
-			sound_manager->playSuccess();
-		}
-		
-	} 
-}
+
 void Ball::update(gameUpdate* update)
 {
 	mBallState = update;
