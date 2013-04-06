@@ -17,7 +17,7 @@ class Player
 {
 public:
     Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
-    	std::string node, std::string color);
+    	std::string node, std::string color, bool isCloseToCamera);
     ~Player(void);
 	btRigidBody* getRigidBody(void);
 	void updatePosition(const Ogre::FrameEvent& evt);

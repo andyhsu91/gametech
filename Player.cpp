@@ -22,7 +22,7 @@ double paddleScale = 0.75f;
  
 
 Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
-	std::string node, std::string color)
+	std::string node, std::string color, bool isCloseToCamera)
 {
 	forceUpdate = false;
 	
@@ -37,7 +37,7 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
    	
    	int size = edgeSize/2;
    	
-   	if(color.compare("Examples/Red50") != 0) {
+   	if(!isCloseToCamera) {
    		size = -size;
    	}
    	Ogre::Vector3 position = Ogre::Vector3(0, 0, size);

@@ -128,11 +128,19 @@ void GTA2Application::createScene(void)
 	env.initEnvironment(mSceneMgr, &bullet, isMultiplayer);
    
     //PADDLE ------------------------------------------------------------------
-    players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50"));
-    
+    if(!isMultiplayer){
+    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
+	}    
 	if(isMultiplayer) {
-    	//cout << "HURF" << endl;
-    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50"));
+		if(isServer){
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50", false));
+    	}
+    	else{
+	    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Green50", true));
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Red50", false));
+    	}
+    	
     	multiUpdate = new gameUpdate;
     }
     
@@ -181,6 +189,9 @@ void GTA2Application::createScene(void)
     	sheet->addChildWindow(score2Pointer);
     	CEGUI::System::getSingleton().setGUISheet(sheet);
     	
+	} else{
+	
+	
 	}
 	
 	//High score display
