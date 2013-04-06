@@ -137,9 +137,9 @@ void Ball::updateBallPos(btVector3 ballPos){
 		//play bounce so long as it hasn't been played in the last few frames
 		if(cooldown.getX()==0.0){
 			sound_manager->playBounce();
-			score->incrementScore();
+			score->incrementServerScore();
 			
-			if(isMulti) { score->incrementSecondScore(); }
+			if(isMulti) { score->incrementClientScore(); }
 		}
 		cooldown.setX(cooldownMax);
 		
@@ -150,9 +150,9 @@ void Ball::updateBallPos(btVector3 ballPos){
 		if(cooldown.getY()==0.0){
 			if(yDir==1.0 && currBallDir.getY() == -1.0){
 				sound_manager->playBounce();
-				score->incrementScore();
+				score->incrementServerScore();
 				
-				if(isMulti) { score->incrementSecondScore(); }
+				if(isMulti) { score->incrementClientScore(); }
 			}
 		}
 		cooldown.setY(cooldownMax);
@@ -163,9 +163,9 @@ void Ball::updateBallPos(btVector3 ballPos){
 		//play bounce
 		if(cooldown.getZ()==0.0){
 			sound_manager->playBounce();
-			score->incrementScore();
+			score->incrementServerScore();
 			
-			if(isMulti) { score->incrementSecondScore(); }
+			if(isMulti) { score->incrementClientScore(); }
 		}
 		cooldown.setZ(cooldownMax);
 	}
@@ -221,13 +221,13 @@ void Ball::update()
 		resetBall(ballPos);
 		
 		if(ballPos.getZ() > edgeSize*1.01) {
-			if(score->resetScore()) {
+			if(score->resetServerScore()) {
 				sound_manager->playFailure();
 			}	
 		}
 		
 		if(ballPos.getZ() < -edgeSize*1.01) {
-			score->resetSecondScore();
+			score->resetClientScore();
 			sound_manager->playSuccess();
 		}
 		
@@ -249,13 +249,13 @@ void Ball::update(gameUpdate* update)
 		resetBall(ballPos);
 		
 		if(ballPos.getZ() > edgeSize*1.01) {
-			if(score->resetScore()) {
+			if(score->resetServerScore()) {
 				sound_manager->playFailure();
 			}	
 		}
 		
 		if(ballPos.getZ() < -edgeSize*1.01) {
-			score->resetSecondScore();
+			score->resetClientScore();
 			sound_manager->playSuccess();
 		}
 	} 

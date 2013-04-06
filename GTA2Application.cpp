@@ -173,7 +173,7 @@ void GTA2Application::createScene(void)
 	    
     	//Second player score
     	score2Pointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/Score2Button");
-		sprintf(score2String, "HIS SCORE: %d", score.getSecondScore());
+		sprintf(score2String, "HIS SCORE: %d", score.getClientScore());
     	score2Pointer->setText(scoreString);
     	score2Pointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
 		score2Pointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(0.80f, 0))); 	
@@ -195,7 +195,7 @@ void GTA2Application::createScene(void)
     
 	//Own score
 	scorePointer = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/ScoreButton");
-	sprintf(scoreString, "MY SCORE: %d", score.getScore());
+	sprintf(scoreString, "MY SCORE: %d", score.getServerScore());
     scorePointer->setText(scoreString);
     scorePointer->setSize(CEGUI::UVector2(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
 	scorePointer->setPosition(CEGUI::UVector2(CEGUI::UDim(0.8f, 0), CEGUI::UDim(hostscoreplacement, 0))); 	
@@ -232,8 +232,8 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     mKeyboard->capture();
     mMouse->capture();
 	
-	sprintf (scoreString, "MY SCORE: %d", score.getScore());
-	sprintf (score2String, "HIS SCORE: %d", score.getSecondScore());
+	sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
+	sprintf (score2String, "HIS SCORE: %d", score.getClientScore());
 	sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
 	sprintf (highScoreName, "ON TOP: %s", score.getTopPlayer());
 	scorePointer->setText(scoreString);
@@ -274,6 +274,11 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				multiUpdate->paddleDir[2] = hostState->paddleDir[2];
 				multiUpdate->paddleDir[3] = hostState->paddleDir[3];
 				
+				multiUpdate->topPlayerNum = score.getTopPlayerNum();
+				multiUpdate->scores[SERVER_SCORE] = score.getServerScore();
+				multiUpdate->scores[CLIENT_SCORE] = score.getClientScore();
+				multiUpdate->scores[HIGH_SCORE] = score.getMaxScore();
+				
 				network_manager->sendPacket(*multiUpdate);
 
 				if(newPacketReceived){
@@ -291,6 +296,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				if(newPacketReceived){
 					players[1]->updatePosition(evt, network_manager->getGameUpdate());
 					ball.update(network_manager->getGameUpdate());	
+					score.updateScore(network_manager->getGameUpdate());
 				}
 				else{
 					players[1]->updatePosition(evt);

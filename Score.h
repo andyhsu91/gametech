@@ -8,63 +8,84 @@ Filename:    Score.h
 
 #include <Ogre.h>
 #include <stdio.h>
-
+#include "gameUpdate.h"
 
 class Score
 {
 public:
     Score(void) {
     	maxScore = 0;
-    	score = 0;
-    	secondScore = 0;
+    	serverScore = 0;
+    	clientScore = 0;
+    	topPlayerNum=-1;
     	sprintf (topPlayer, "---");
     }
-	int getScore() {
-		return score;
+	int getServerScore() {
+		return serverScore;
 	}
 	int getMaxScore() {
 		return maxScore;
 	}
-	int getSecondScore() {
-		return secondScore;
+	int getClientScore() {
+		return clientScore;
 	}
-	void incrementScore() {
-		score++;
+	void incrementServerScore() {
+		serverScore++;
 	}
-	void incrementSecondScore() {
-		secondScore++;
+	void incrementClientScore() {
+		clientScore++;
 	}
-	bool resetScore() {
+	bool resetServerScore() {
 		bool result = false;
-		if(score > maxScore) {
-			maxScore = score;
+		if(serverScore > maxScore) {
+			maxScore = serverScore;
+			topPlayerNum=1;
 			sprintf(topPlayer, "Player 1");
 		} else {
 			result = true;
 		}
-		score = 0;
+		serverScore = 0;
 		return result;
 	}
-	bool resetSecondScore() {
+	bool resetClientScore() {
 		bool result = false;
-		if(secondScore > maxScore) {
-			maxScore = secondScore;
+		if(clientScore > maxScore) {
+			maxScore = clientScore;
+			topPlayerNum=2;
 			sprintf (topPlayer, "Player 2");
 		} else {
 			result = true;
 		}
-		secondScore = 0;
+		clientScore = 0;
 		return result;
 	}
 	char* getTopPlayer() {
 		return &topPlayer[0];
 	}
+
+	int getTopPlayerNum(){
+		return topPlayerNum;
+	}
+	
+	void updateScore(gameUpdate* update){
+		
+		serverScore = update->scores[SERVER_SCORE];
+		clientScore = update->scores[CLIENT_SCORE];
+		maxScore = update->scores[HIGH_SCORE];
+		topPlayerNum = update->topPlayerNum;
+		if(topPlayerNum==1){
+			sprintf(topPlayer, "Player 1");
+		} else{
+			sprintf(topPlayer, "Player 2");
+		}
+	}
 		
 
 private:
 	int maxScore;
-	int score;
-	int secondScore;
+	int serverScore;
+	int clientScore;
+	int topPlayerNum;
 	char topPlayer[32];
 };
 
