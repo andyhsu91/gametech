@@ -284,20 +284,20 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 					players[1]->updatePosition(evt, network_manager->getGameUpdate());
 					ball.update(network_manager->getGameUpdate());	
 				}
-				else
+				else {
 					players[1]->updatePosition(evt);
-					
+				}
 				
 				gameUpdate* clientState = players[0]->getPlayerGameState();
 				
-				multiUpdate->paddlePos[0] = clientState->paddlePos[0];
-				multiUpdate->paddlePos[1] = clientState->paddlePos[1];
-				multiUpdate->paddlePos[2] = clientState->paddlePos[2];
+				multiUpdate->paddlePos[0] = -clientState->paddlePos[0];
+				multiUpdate->paddlePos[1] =  clientState->paddlePos[1];
+				multiUpdate->paddlePos[2] = -clientState->paddlePos[2];
 				
-				multiUpdate->paddleDir[0] = clientState->paddleDir[0];
-				multiUpdate->paddleDir[1] = clientState->paddleDir[1];
-				multiUpdate->paddleDir[2] = clientState->paddleDir[2];
-				multiUpdate->paddleDir[3] = clientState->paddleDir[3];
+				multiUpdate->paddleDir[PAD_UP]    =  clientState->paddleDir[PAD_UP];
+				multiUpdate->paddleDir[PAD_DOWN]  =  clientState->paddleDir[PAD_DOWN];
+				multiUpdate->paddleDir[PAD_LEFT]  =  clientState->paddleDir[PAD_RIGHT];
+				multiUpdate->paddleDir[PAD_RIGHT] =  clientState->paddleDir[PAD_LEFT];
 				
 				network_manager->sendPacket(*multiUpdate);			
 			}				
