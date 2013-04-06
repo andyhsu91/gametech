@@ -315,21 +315,25 @@ gameUpdate* NetworkManager::getGameUpdate(){
 
 bool NetworkManager::sendPacket(gameUpdate update){	
 
-	char* byteArray = static_cast<char*>(static_cast<void*>(&update)); //cast gameUpdate to byteArray
+	if(connectionOpen){
+		char* byteArray = static_cast<char*>(static_cast<void*>(&update)); //cast gameUpdate to byteArray
 	
-	int numBytesSent = SDLNet_TCP_Send(peerSocket, byteArray, sizeof(update));
+		int numBytesSent = SDLNet_TCP_Send(peerSocket, byteArray, sizeof(update));
 	
-	if(numBytesSent == sizeof(update)){
-		if(NM_debug && packetsSent%1000 == 0){
-			std::cout<<"Sent "<<packetsSent+1<<" packets and Received "<<packetsReceived<<" packets so far."<<std::endl;
+		if(numBytesSent == sizeof(update)){
+			if(NM_debug && packetsSent%1000 == 0){
+				std::cout<<"Sent "<<packetsSent+1<<" packets and Received "<<packetsReceived<<" packets so far."<<std::endl;
+			}
+			packetsSent++;
+			return true;
 		}
-		packetsSent++;
-		return true;
+		else{
+			std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
+		}
+		return false;
+	} else{
+		
 	}
-	else{
-		std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
-	}
-	return false;
 }
 
 bool NetworkManager::checkForPackets(){
@@ -366,7 +370,7 @@ bool NetworkManager::checkForPackets(){
 
 void NetworkManager::readPacketToBuffer(){
 	
-	//blocking call, only call readPacket if you **know** a packet has been received
+	//blocking call, only call readPacketToBuffer() if you **know** a packet has been received
 	int numBytesReceived = SDLNet_TCP_Recv(peerSocket, buffer, sizeof(buffer)-1); 
 
 	if(numBytesReceived == -1){

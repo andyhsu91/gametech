@@ -112,6 +112,32 @@ void Ball::resetBall(btVector3 ballPos)
     mBallState->ballVel[2] = startVelocity.getZ();
 	
 }
+
+void Ball::incrementBallType()
+{
+	if(ballType == maxBallType-1)
+		bullet->setBallRestitution(1.00);
+	else
+		bullet->setBallRestitution(1.05);
+		
+	Ogre::Entity* ballz = mSceneMgr->getEntity("Sphere");
+
+	ballType = (++ballType) % maxBallType;
+	string type = "Ball/Ball" + ballType;
+	ballz->setMaterialName(type);
+}
+void Ball::randomizeStartVelocity(void)
+{
+
+	float x = ((double)rand()/(RAND_MAX)) * maxVelocity + 100; //make sure that its at least 100
+	float y = ((double)rand()/(RAND_MAX)) * maxVelocity + 100;
+	float z = ((double)rand()/(RAND_MAX)) * maxVelocity + 100;
+	
+	//randomize start velocity, but make sure that ball starts in negative z direction.
+	startVelocity = btVector3(x,y,-z);
+	
+}
+
 void Ball::updateBallPos(btVector3 ballPos){
 	//this function does not update bullet, it only checks for score updates or bounces
 	
@@ -182,30 +208,7 @@ void Ball::updateBallPos(btVector3 ballPos){
     mBallState->ballPos[1] = currBallPos.getY();
     mBallState->ballPos[2] = currBallPos.getZ();
 }
-void Ball::incrementBallType()
-{
-	if(ballType == maxBallType-1)
-		bullet->setBallRestitution(1.00);
-	else
-		bullet->setBallRestitution(1.05);
-		
-	Ogre::Entity* ballz = mSceneMgr->getEntity("Sphere");
 
-	ballType = (++ballType) % maxBallType;
-	string type = "Ball/Ball" + ballType;
-	ballz->setMaterialName(type);
-}
-void Ball::randomizeStartVelocity(void)
-{
-
-	float x = ((double)rand()/(RAND_MAX)) * maxVelocity + 100; //make sure that its at least 100
-	float y = ((double)rand()/(RAND_MAX)) * maxVelocity + 100;
-	float z = ((double)rand()/(RAND_MAX)) * maxVelocity + 100;
-	
-	//randomize start velocity, but make sure that ball starts in negative z direction.
-	startVelocity = btVector3(x,y,-z);
-	
-}
 void Ball::update()
 {	//this function decides whether 
 	btTransform ballTrans;

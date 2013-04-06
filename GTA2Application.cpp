@@ -263,7 +263,11 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			
 			//check for packets and read them to buffer
 			bool newPacketReceived = network_manager->checkForPackets();
-			
+			//check to see if peer closed connection
+			bool connectionStillOpen = network_manager->isConnectionOpen();
+			if(!connectionStillOpen){
+				mShutDown = true;
+			}
 			if(isServer) {
 				//I am server
 				bullet.updateWorld(evt);
@@ -307,6 +311,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			} 
 			else {
 				//I am client
+				bullet.updateWorld(evt); //without this paddles don't move
 				players[0]->updatePosition(evt); //update myself normally
 				
 				if(newPacketReceived){
@@ -369,7 +374,7 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
         break;
         
     //Debugging second player, delete when done
-    case OIS::KC_L:
+    /*case OIS::KC_L:
         players[1]->updatePadDirection(PAD_RIGHT, true);
         break;
     case OIS::KC_J:
@@ -381,7 +386,8 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
     case OIS::KC_K:
     	players[1]->updatePadDirection(PAD_DOWN, true);
         break; 
-        
+    */
+    
     case OIS::KC_D:
         players[0]->updatePadDirection(PAD_RIGHT, true);
         break;
