@@ -9,7 +9,7 @@ struct gameUpdate
 	float ballVel[3]; 	//x, y, z
 	float paddlePos[3];	//x, y, z
 	bool  paddleDir[4];	//up, down, left, right
-	int scores[3];		//server, client, high score
+	int   scores[3];	//server, client, high score
 };
 
 

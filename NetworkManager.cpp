@@ -47,13 +47,10 @@ NetworkManager::NetworkManager() {
 	connectionOpen=false;
 	
 	if(NM_debug){std::cout<<"Entered Network Manager()"<<std::endl;}
-	//SDL_Init(SDL_INIT_EVERYTHING);
-	
 	
 	//check for server, and attempt to become client
 	bool serverFound = checkForServer();
 
-	
 	//if no server found, become a server, and check for clients
 	if(!serverFound){
 		if(SDLNet_Init() < 0){
@@ -80,8 +77,6 @@ NetworkManager::NetworkManager() {
 		}
 		
 		std::cout<<"Server has opened socket with IP: "<< intToIpAddr(myIp.host)<<" and Port: "<<SDLNet_Read16(&myIp.port)<<std::endl;
-		//add serverSocket to socketSet
-		//SDLNet_TCP_AddSocket(socketSet, serverSocket);
 		isServer=true;
 		
 		broadcastToClients();
@@ -152,9 +147,6 @@ char*  NetworkManager::intToIpAddr(long ipAddress, bool networkByteOrder){
                                             ,(ipAddress & 0x0000ff00) >> 8
                                             ,(ipAddress & 0x00ff0000) >> 16
                                             ,(ipAddress & 0xff000000) >> 24);
-    
-  
-	//if(NM_debug){std::cout<<"Converted "<<ipAddress<<" to "<<ipAddr<<std::endl;}
 	
 	if(conversion){delete conversion;}//delete possible previous conversions from heap
 	conversion = ipAddr;//keep track to avoid memory leak
@@ -196,11 +188,11 @@ bool NetworkManager::checkForServer(){
 		if(errorCode == 1){
 			//successfully recieved UDP packet, copy packet data to local packet data
 			memcpy(&packetData, packet->data, sizeof(IPaddress));
-			if(NM_debug){std::cout<<"Packet recieved."<<std::endl;}
-			if(NM_debug){std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<SDLNet_Read16(&packetData.port)<<std::endl;}
-			if(NM_debug){std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<SDLNet_Read16(&packet->address.port)<<std::endl;}
-			//packetData.host = packet->address.host;
-			//packetData.port = packet->address.port;
+			if(NM_debug){
+				std::cout<<"Packet recieved."<<std::endl;}
+				std::cout<<"packetData.host="<<intToIpAddr(packetData.host)<<", packetData.port="<<SDLNet_Read16(&packetData.port)<<std::endl;
+				std::cout<<"packet.host="<<intToIpAddr(packet->address.host)<<", packet.port="<<SDLNet_Read16(&packet->address.port)<<std::endl;
+			}
 			if(SDLNet_Read16(&packetData.port) == PORT_NUM){
 				if(NM_debug){std::cout<<"Packet is a server packet."<<std::endl;}
 				serverFound=true;
@@ -216,38 +208,9 @@ bool NetworkManager::checkForServer(){
 	
 	if(serverFound){
 		//received UDP packet from server, so make connection as a client
-		//if(NM_debug){std::cout<<"creating socket set."<<std::endl;}
 		socketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
-		//if(NM_debug){std::cout<<"convert uint32 to char*"<<std::endl;}
 		
-		//char* ipAddr=intToIpAddr(packet->address.host, true);
-		//char* serverIP = conversion;
-		/*if(ipAddr == NULL){
-			std::cout<<"Error: conversion error"<<std::endl;
-		}else{
-			std::cout<<"serverIP:"<<ipAddr<<std::endl;
-		}*/
-		//if(NM_debug){std::cout<<"resolving serverIP"<<std::endl;}
-		//snprintf(serverIP, sizeof(serverIP), "%lu", (unsigned long)packet->address.host); //convert uint32 address.host to char*
-		//char* ipAddr=intToIpAddr(packet->address.host, true);
-		//std::cout<<"result of intToIpAddr:"<<ipAddr<<std::endl;
-		
-		
-		
-		//this damn line keeps causing segfaults...
-		//int errorCode = SDLNet_ResolveHost(remoteIP, ipAddr, PORT_NUM);
-		
-		
-		
-		//int errorCode = 0;
-		
-		
-		/*if(errorCode != 0){ 
-			//failure
-			std::cout<<"Error: could not resolve host."<<std::endl;
-			return false;
-		}*/
-		if(NM_debug){std::cout<<"opening TCP connection with server at "<<intToIpAddr(packetData.host)<<":"<<SDLNet_Read16(&packetData.port)<<std::endl;}
+		if(NM_debug){std::cout<<"Opening TCP connection with server at "<<intToIpAddr(packetData.host)<<":"<<SDLNet_Read16(&packetData.port)<<std::endl;}
 		peerSocket = SDLNet_TCP_Open(&packetData); //open TCP connection with the server
 	
 		if(peerSocket == NULL){
@@ -264,12 +227,12 @@ bool NetworkManager::checkForServer(){
 		}
 	
 		//add peerSocket to socketSet
-		//if(NM_debug){std::cout<<"adding peerSocket to socketSet"<<std::endl;}
 		SDLNet_TCP_AddSocket(socketSet, peerSocket);
-		if(NM_debug){std::cout<<"Connected successfully to server."<<std::endl;}
+		std::cout<<"Connected successfully to server."<<std::endl;
 		connectionOpen=true;
 		isServer=false;
-		std::cout<<"Exiting checkForServer()."<<std::endl;
+		
+		if(NM_debug){std::cout<<"Exiting checkForServer()."<<std::endl;}
 		return true;
 	}
 	else{
@@ -302,7 +265,6 @@ void NetworkManager::waitForClientConnection(){
 void NetworkManager::broadcastToClients(){
 	//server is broadcasting to all connected devices on local network to PORT_NUM
 	//clients should listen for the packet and respond by requesting a TCP connection
-	//if(NM_debug){std::cout<<"Entering broadcastToClients()."<<std::endl;}
 	UDPpacket* packet = SDLNet_AllocPacket(sizeof(IPaddress));
 	UDPsocket UdpSocket = SDLNet_UDP_Open(0);
 
@@ -313,23 +275,17 @@ void NetworkManager::broadcastToClients(){
 	packet->address.port = addr.port;
 	packet->len = sizeof(myIp);
 	memcpy(packet->data, &myIp, sizeof(myIp));
-	//if(NM_debug){std::cout<<"Broadcasting to clients..."<<std::endl;}
+	
 	SDLNet_UDP_Send(UdpSocket, -1, packet); //broadcast packet
 	
-	//if(NM_debug){std::cout<<"Exiting broadcastToClients()."<<std::endl;}
 }
 
 void NetworkManager::checkForClient(){
-	//if(NM_debug){std::cout<<"Entering checkForClients()."<<std::endl;}
 	
-	//check to see if any client has requested a connection with server
+	/* Check to see if any client has requested a connection with server */
 	peerSocket = SDLNet_TCP_Accept(serverSocket);
-	if(peerSocket==NULL){
-		//no client requested connection
-		//printf("SDLNet_TCP_Accept: %s. No client found.\n", SDLNet_GetError());
-		//if(NM_debug){std::cout<<"No client response..."<<std::endl;}
-	}
-	else{
+	if(peerSocket!=NULL){
+
 		/* Now we can communicate with the client using peerSocket
 		* serverSocket will remain opened waiting other connections */
 		if(NM_debug){std::cout<<"Received TCP connection request."<<std::endl;}
@@ -337,7 +293,6 @@ void NetworkManager::checkForClient(){
 		if ((remoteIP = SDLNet_TCP_GetPeerAddress(peerSocket))){
 			/* Print the address, converting in the host format */
 			if(NM_debug){std::cout<<"Connected successfully to client at "<<intToIpAddr(remoteIP->host)<<":"<<SDLNet_Read16(&remoteIP->port)<<""<<std::endl;}
-			//printf("Host connected: %x %d\n", SDLNet_Read32(&remoteIP->host), SDLNet_Read16(&remoteIP->port));
 			int numSocketsInSet = SDLNet_TCP_AddSocket(socketSet, peerSocket); //add peerSocket to socketSet
 			
 			isServer=true;
@@ -345,44 +300,20 @@ void NetworkManager::checkForClient(){
 		
 		}
 		else{
-			fprintf(stderr, "SDLNet_TCP_GetPeerAddress: %s\n", SDLNet_GetError());
+			std::cout<<"SDLNet_TCP_GetPeerAddress:"<<SDLNet_GetError()<<std::endl;
 		}
 	
 	}
 	
-	//if(NM_debug){std::cout<<"Exiting checkForClients()."<<std::endl;}
+
 }
 
-bool NetworkManager::checkForPackets(){
-	//if(NM_debug){std::cout<<"Entering checkForPackets()."<<std::endl;}
-	bool retVal=false;
-	if(connectionOpen){
-		//only care about latest gameUpdate, if we've received multiple game updates from the client (which is likely since the client has less calculations to do), then keep reading packets until the most recent one is in the buffer.
-		bool readAllPackets = false;
-		do{
-			//check for activity with 0 millisecond timeout
-			int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); //refresh activity count of all sockets in set
-			int peerIsReady = SDLNet_SocketReady(peerSocket); //returns non-zero if server is ready
-		
-			if(socketsWithActivity > 0 && peerIsReady != 0){
-				readPacketToBuffer();
-				socketsWithActivity--;
-				retVal = true;
-			} else{
-				readAllPackets=true;
-			}
-			if(socketsWithActivity>0){
-				std::cout<<"Error: more than 1 socket with activity."<<std::endl;	
-			}
-		} while(!readAllPackets);
-	}
-	//if(NM_debug){std::cout<<"Exiting checkForPackets()."<<std::endl;}
-	return retVal;
+gameUpdate* NetworkManager::getGameUpdate(){
+	gameUpdate* latestUpdate = (gameUpdate*) buffer; 
+	return latestUpdate;
 }
-
 
 bool NetworkManager::sendPacket(gameUpdate update){	
-	//if(NM_debug){std::cout<<"Entering sendPacket()."<<std::endl;}
 
 	char* byteArray = static_cast<char*>(static_cast<void*>(&update)); //cast gameUpdate to byteArray
 	
@@ -401,15 +332,41 @@ bool NetworkManager::sendPacket(gameUpdate update){
 	return false;
 }
 
-gameUpdate* NetworkManager::getGameUpdate(){
-	gameUpdate* latestUpdate = (gameUpdate*) buffer; 
-	return latestUpdate;
+bool NetworkManager::checkForPackets(){
+	bool retVal=false;
+	if(connectionOpen){
+		/* 	Only care about latest gameUpdate, if we've received multiple game 
+			updates from the client (which is likely since the client has less 
+			calculations to do), then keep reading packets until the most recent
+			one is in the buffer. 	
+		*/
+		bool readAllPackets = false;
+		do{
+			//check for activity with 0 millisecond timeout
+			int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); //refresh activity count of all sockets in set
+			int peerIsReady = SDLNet_SocketReady(peerSocket); //returns non-zero if server is ready
+		
+			if(socketsWithActivity > 0 && peerIsReady != 0){
+				readPacketToBuffer();
+				socketsWithActivity--;
+				retVal = true;
+			} else{
+				readAllPackets=true;
+			}
+			if(socketsWithActivity>0){
+				std::cout<<"Error: more than 1 socket with activity."<<std::endl;	
+			}
+		} while(!readAllPackets);
+	}
+	return retVal;
 }
 
 
+
+
 void NetworkManager::readPacketToBuffer(){
-	//if(NM_debug){std::cout<<"Entering readPacketToBuffer()"<<std::endl;}
-	//blocking call, only call readPacket if you *know* a packet has been received
+	
+	//blocking call, only call readPacket if you **know** a packet has been received
 	int numBytesReceived = SDLNet_TCP_Recv(peerSocket, buffer, sizeof(buffer)-1); 
 
 	if(numBytesReceived == -1){
@@ -435,7 +392,7 @@ void NetworkManager::readPacketToBuffer(){
 		
 		packetsReceived++;
 	}
-	//if(NM_debug){std::cout<<"Exiting readPacket()."<<std::endl;}
+	
 }
 
 NetworkManager::~NetworkManager() {
