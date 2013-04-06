@@ -243,8 +243,13 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     mKeyboard->capture();
     mMouse->capture();
 	
-	sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
-	sprintf (score2String, "HIS SCORE: %d", score.getClientScore());
+	if(isServer){
+		sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
+		sprintf (score2String, "HIS SCORE: %d", score.getClientScore());
+	}else{
+		sprintf (scoreString, "MY SCORE: %d", score.getClientScore());
+		sprintf (score2String, "HIS SCORE: %d", score.getServerScore());
+	}
 	sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
 	sprintf (highScoreName, "ON TOP: %s", score.getTopPlayer());
 	scorePointer->setText(scoreString);
