@@ -357,18 +357,24 @@ bool NetworkManager::checkForPackets(){
 	//if(NM_debug){std::cout<<"Entering checkForPackets()."<<std::endl;}
 	bool retVal=false;
 	if(connectionOpen){
-		//check for activity with 0 millisecond timeout
-		int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); //refresh activity count of all sockets in set
-		int peerIsReady = SDLNet_SocketReady(peerSocket); //returns non-zero if server is ready
+		//only care about latest gameUpdate, if we've received multiple game updates from the client (which is likely since the client has less calculations to do), then keep reading packets until the most recent one is in the buffer.
+		bool readAllPackets = false;
+		do{
+			//check for activity with 0 millisecond timeout
+			int socketsWithActivity = SDLNet_CheckSockets(socketSet, 0); //refresh activity count of all sockets in set
+			int peerIsReady = SDLNet_SocketReady(peerSocket); //returns non-zero if server is ready
 		
-		if(socketsWithActivity > 0 && peerIsReady != 0){
-			readPacketToBuffer();
-			socketsWithActivity--;
-			retVal = true;
-		}
-		if(socketsWithActivity>0){
-			std::cout<<"Error: more than 1 socket with activity."<<std::endl;	
-		}
+			if(socketsWithActivity > 0 && peerIsReady != 0){
+				readPacketToBuffer();
+				socketsWithActivity--;
+				retVal = true;
+			} else{
+				readAllPackets=true;
+			}
+			if(socketsWithActivity>0){
+				std::cout<<"Error: more than 1 socket with activity."<<std::endl;	
+			}
+		} while(!readAllPackets);
 	}
 	//if(NM_debug){std::cout<<"Exiting checkForPackets()."<<std::endl;}
 	return retVal;
@@ -383,13 +389,15 @@ bool NetworkManager::sendPacket(gameUpdate update){
 	int numBytesSent = SDLNet_TCP_Send(peerSocket, byteArray, sizeof(update));
 	
 	if(numBytesSent == sizeof(update)){
-		if(NM_debug && packetsReceived%1000 == 0){
-			std::cout<<"Sent "<<packetsSent+1<<" packets so far."<<std::endl;
+		if(NM_debug && packetsSent%1000 == 0){
+			std::cout<<"Sent "<<packetsSent+1<<" packets and Received "<<packetsReceived<<" packets so far."<<std::endl;
 		}
 		packetsSent++;
 		return true;
 	}
-	std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
+	else{
+		std::cout<<"Failed to send message: " << SDLNet_GetError() << std::endl;
+	}
 	return false;
 }
 
@@ -422,7 +430,7 @@ void NetworkManager::readPacketToBuffer(){
 	}
 	else if(numBytesReceived == sizeof(gameUpdate)){
 		if(NM_debug && packetsReceived%1000 == 0){
-			std::cout<<"Received "<<packetsReceived+1<<" packets so far."<<std::endl;
+			std::cout<<"Received "<<packetsReceived+1<<" packets and Sent "<<packetsSent<<" packets so far."<<std::endl;
 		}
 		
 		packetsReceived++;
