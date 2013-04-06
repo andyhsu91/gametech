@@ -84,8 +84,8 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 }
 void Ball::resetBall(btVector3 ballPos)
 {
-	
-	btVector3 opposite = btVector3(-ballPos.getX()/10, -ballPos.getY()/10, -ballPos.getZ()/10);
+	//this function moves ball back to origin
+	btVector3 opposite = btVector3(-ballPos.getX()/10.0, -ballPos.getY()/10.0, -ballPos.getZ()/10.0);
 
 	ball->translate(opposite);
 	randomizeStartVelocity();
@@ -113,6 +113,7 @@ void Ball::resetBall(btVector3 ballPos)
 	
 }
 void Ball::updateBallPos(btVector3 ballPos){
+	//this function does not update bullet, it only checks for score updates or bounces
 	
 	//find out if traveling in positive or negative direction for each axis
 	float xDir = (ballPos.getX() - currBallPos.getX()) > 0.0 ? 1.0 : -1.0;
@@ -206,7 +207,7 @@ void Ball::randomizeStartVelocity(void)
 	
 }
 void Ball::update()
-{
+{	//this function decides whether 
 	btTransform ballTrans;
 	ball->getMotionState()->getWorldTransform(ballTrans);
 	btVector3 ballPos = ballTrans.getOrigin();

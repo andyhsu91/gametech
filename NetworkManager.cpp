@@ -23,7 +23,7 @@ const unsigned int MAX_SOCKETS = 2;
 const unsigned int BUFFER_SIZE = sizeof(gameUpdate)+1;
 const unsigned int PORT_NUM = 57996; 	//36066 in network byte order, randomly chosen port num to use for Network Manager
 const unsigned short MAX_CLIENTS = MAX_SOCKETS - 1;
-const int serverSearchTimeout = 3; 		//number of seconds to search for server if client
+const int serverSearchTimeout = 1; 		//number of seconds to search for server if client
 const int clientSearchTimeout = 10;		//number of seconds to search for client if server
 const int clientResponseTimeout = 3; 	//milliseconds to wait for clients to respond to broadcast
 const int serverBroadcastTimeout = 500;	//milliseconds to wait between server rebroadcasts
@@ -425,7 +425,7 @@ void NetworkManager::readPacketToBuffer(){
 		peerSocket=NULL;
 		connectionOpen = false;	
 		if(NM_debug){std::cout<<"Connection closed by peer."<<std::endl;}
-		std::cout<<"Exiting readPacket()."<<std::endl;
+		std::cout<<"Exiting readPacketToBuffer()."<<std::endl;
 		return;
 	}
 	else if(numBytesReceived == sizeof(gameUpdate)){

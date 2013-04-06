@@ -7,10 +7,10 @@ Filename:    Player.cpp
 #include "PhysicsSimulator.h"
 #include <cstdlib>
 
-#define PAD_LEFT  0
-#define PAD_RIGHT 1
-#define PAD_UP    2
-#define PAD_DOWN  3
+#define PAD_UP    0
+#define PAD_DOWN  1
+#define PAD_LEFT  2
+#define PAD_RIGHT 3
 
 using namespace std;
 

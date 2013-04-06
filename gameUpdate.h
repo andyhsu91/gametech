@@ -1,13 +1,15 @@
 #ifndef _gameUpdate_H_
 #define _gameUpdate_H_
 
+
+
 struct gameUpdate
 {	
-	//must be smaller than 512 bytes
-	float ballPos[3];
-	float ballVel[3];
-	float paddlePos[3];
-	bool  paddleDir[4];
+	float ballPos[3]; 	//x, y, z
+	float ballVel[3]; 	//x, y, z
+	float paddlePos[3];	//x, y, z
+	bool  paddleDir[4];	//up, down, left, right
+	int scores[3];		//server, client, high score
 };
 
 
