@@ -161,6 +161,7 @@ void GTA2Application::createScene(void)
 	// Main create scene/initialization code
 	else{
 		
+		mouseCam = true;
 		// Clean up main menu.
 		startBut->setPosition(CEGUI::UVector2(CEGUI::UDim(2.0f, 0), CEGUI::UDim(2.0f, 0)));
 		netBut->setPosition(CEGUI::UVector2(CEGUI::UDim(2.0f, 0), CEGUI::UDim(2.0f, 0)));
