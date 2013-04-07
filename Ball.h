@@ -29,7 +29,10 @@ public:
 	void update();
 	void update(gameUpdate* update);
 	gameUpdate* getBallGameState();
-
+	float* getStartVelocity();
+	void updateBulletBallPos(btVector3 gameUpdateBallPos, btVector3 bulletBallPos);
+	void setVelocity(float* vel);
+	
 private:
 	Ogre::SceneManager* mSceneMgr;
 	PhysicsSimulator* bullet;

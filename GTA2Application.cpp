@@ -118,9 +118,11 @@ void GTA2Application::createScene(void)
  		isMultiplayer=false;
  	}
 	cout<<"Current State: connectionOpen="<<boolalpha<<connectionOpen<<", isMutliplayer="<<isMultiplayer<<", isServer="<<isServer<<endl;
-    // Create a ball
+	
+	// Create a ball
+    
     ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer, isMultiplayer);
-
+	
     // Create a Light and set its position
     Ogre::Light* light = mSceneMgr->createLight("MainLight");
     light->setPosition(20.0f, 80.0f, 50.0f);

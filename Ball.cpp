@@ -15,7 +15,7 @@ static Ogre::Vector3 velocityVec = Ogre::Vector3::ZERO;
 btVector3 startVelocity = btVector3(0,0, -250);
 int maxVelocity = 300;
 static int speedModifier = 3;
-
+float mass = 100.0;
 static int edgeSize = 500;
 
 gameUpdate* mBallState;
@@ -53,13 +53,15 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
    	ballz->setCastShadows(true);
     
     //float mass = isServer ? 100.0 : 0.0;
-    float mass = 100.0;
+    
     
     //change this line for danbo vs sphere
-    Ogre::Vector3 dim = 1*ballNode->getScale();
+    Ogre::Vector3 dim = 1.5*ballNode->getScale();
     Ogre::Vector3 pos = ballNode->getPosition();
     ball = bullet->setRigidBoxBody(ballNode, dim, pos, mass);
+    
     randomizeStartVelocity();
+    
     ball->setLinearVelocity(startVelocity);
     
     currBallDir.setX(0.0);
@@ -84,8 +86,9 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 }
 void Ball::resetBall(btVector3 ballPos)
 {
+	float rf = 10.0;
 	//this function moves ball back to origin
-	btVector3 opposite = btVector3(-ballPos.getX()/10.0, -ballPos.getY()/10.0, -ballPos.getZ()/10.0);
+	btVector3 opposite = btVector3(-ballPos.getX()/rf, -ballPos.getY()/rf, -ballPos.getZ()/rf);
 
 	ball->translate(opposite);
 	randomizeStartVelocity();
@@ -139,32 +142,34 @@ void Ball::randomizeStartVelocity(void)
 }
 
 void Ball::update()
-{	//this function decides whether 
+{	//this function decides whether to reset score or not
 	btTransform ballTrans;
 	ball->getMotionState()->getWorldTransform(ballTrans);
-	btVector3 ballPos = ballTrans.getOrigin();
+	btVector3 bulletBallPos = ballTrans.getOrigin();
 	
-	updateBallPos(ballPos);
+	updateBallPos(bulletBallPos);
 	
-	if( abs(ballPos.getX()) > edgeSize*1.01 ||
-		abs(ballPos.getY()) > edgeSize*1.01 ||
-		abs(ballPos.getZ()) > edgeSize*1.01	)
+	if( abs(bulletBallPos.getX()) > edgeSize*1.01 ||
+		abs(bulletBallPos.getY()) > edgeSize*1.01 ||
+		abs(bulletBallPos.getZ()) > edgeSize*1.01	)
 	{
-		resetBall(ballPos);
+		resetBall(bulletBallPos);
 		
-		if(ballPos.getZ() > edgeSize*1.01) {
+		if(bulletBallPos.getZ() > edgeSize*1.01) {
 			if(score->resetServerScore()) {
 				sound_manager->playFailure();
 			}	
 		}
 		
-		if(ballPos.getZ() < -edgeSize*1.01) {
+		if(bulletBallPos.getZ() < -edgeSize*1.01) {
 			score->resetClientScore();
 			sound_manager->playSuccess();
 		}
 		
 	} 
 }
+
+
 
 void Ball::updateBallPos(btVector3 ballPos){
 	//this function does not update bullet, it only checks for score updates or bounces
@@ -238,28 +243,57 @@ void Ball::updateBallPos(btVector3 ballPos){
 }
 
 
+float* Ball::getStartVelocity(){
+	float* vel = new float[3];
+	vel[0] = startVelocity.getX();
+	vel[1] = startVelocity.getY();
+	vel[2] = startVelocity.getZ();
+	return vel;
+}
+
+void Ball::setVelocity(float* vel){
+	startVelocity = btVector3(vel[0],vel[1], vel[2]);
+	ball->setLinearVelocity(startVelocity);
+}
+
+void Ball::updateBulletBallPos(btVector3 gameUpdateBallPos, btVector3 bulletBallPos){
+	
+	float xDiff = gameUpdateBallPos.getX() - bulletBallPos.getX();
+	float yDiff = gameUpdateBallPos.getY() - bulletBallPos.getY();
+	float zDiff = gameUpdateBallPos.getZ() - bulletBallPos.getZ();
+	float rf = 10.0;
+	btVector3 opposite = btVector3(xDiff/rf, yDiff/rf, zDiff/rf);
+	ball->translate(opposite);
+	
+}
+
 void Ball::update(gameUpdate* update)
 {
 	mBallState = update;
 	
-	btVector3 ballPos = btVector3(update->ballPos[0], 
-		update->ballPos[1], update->ballPos[2]);
+	btTransform ballTrans;
+	ball->getMotionState()->getWorldTransform(ballTrans);
+	btVector3 bulletBallPos = ballTrans.getOrigin();
 	
-	updateBallPos(ballPos);
+	btVector3 gameUpdateBallPos = btVector3(update->ballPos[0], update->ballPos[1], update->ballPos[2]);
 	
-	if( abs(ballPos.getX()) > edgeSize*1.01 ||
-		abs(ballPos.getY()) > edgeSize*1.01 ||
-		abs(ballPos.getZ()) > edgeSize*1.01	)
+	
+	updateBulletBallPos(gameUpdateBallPos, bulletBallPos);
+	updateBallPos(gameUpdateBallPos);
+	
+	if( abs(gameUpdateBallPos.getX()) > edgeSize*1.01 ||
+		abs(gameUpdateBallPos.getY()) > edgeSize*1.01 ||
+		abs(gameUpdateBallPos.getZ()) > edgeSize*1.01	)
 	{
-		resetBall(ballPos);
+		resetBall(gameUpdateBallPos);
 		
-		if(ballPos.getZ() > edgeSize*1.01) {
+		if(gameUpdateBallPos.getZ() > edgeSize*1.01) {
 			if(score->resetServerScore()) {
 				sound_manager->playFailure();
 			}	
 		}
 		
-		if(ballPos.getZ() < -edgeSize*1.01) {
+		if(gameUpdateBallPos.getZ() < -edgeSize*1.01) {
 			score->resetClientScore();
 			sound_manager->playSuccess();
 		}
