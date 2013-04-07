@@ -137,7 +137,7 @@ void Ball::randomizeStartVelocity(void)
 	float z = ((double)rand()/(RAND_MAX)) * maxVelocity + 100;
 	
 	//randomize start velocity, but make sure that ball starts in negative z direction.
-	startVelocity = btVector3(x,y,z);
+	startVelocity = btVector3(x,y,-z);
 	
 }
 

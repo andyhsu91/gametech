@@ -143,6 +143,11 @@ void GTA2Application::createScene(void)
     		mCamera->setPosition(Ogre::Vector3(0,100,-500));
 			// Look back along -Z
 			mCamera->lookAt(Ogre::Vector3(0,0,0));
+			// Look back along -Z
+			mCamera->lookAt(Ogre::Vector3(0,0,0));
+			mCamera->setNearClipDistance(5);
+			delete mCameraMan;
+			mCameraMan = new OgreBites::SdkCameraMan(mCamera);
     	}
     	
     	multiUpdate = new gameUpdate;
@@ -193,10 +198,7 @@ void GTA2Application::createScene(void)
     	sheet->addChildWindow(score2Pointer);
     	CEGUI::System::getSingleton().setGUISheet(sheet);
     	
-	} else{
-	
-	
-	}
+	} 
 	
 	//High score display
     highScore = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/HighScoreButton");
@@ -246,20 +248,29 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     //Need to capture/update each device
     mKeyboard->capture();
     mMouse->capture();
-	
-	if(isServer){
-		sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
-		sprintf (score2String, "HIS SCORE: %d", score.getClientScore());
-	}else{
-		sprintf (scoreString, "MY SCORE: %d", score.getClientScore());
-		sprintf (score2String, "HIS SCORE: %d", score.getServerScore());
+	cout<<"1";
+	if(isMultiplayer){
+		if(isServer){
+			
+			sprintf (score2String, "HIS SCORE: %d", score.getClientScore());
+		}else{
+			sprintf (scoreString, "MY SCORE: %d", score.getClientScore());
+			sprintf (score2String, "HIS SCORE: %d", score.getServerScore());
+		}
+		sprintf (highScoreName, "ON TOP: %s", score.getTopPlayer());
+		score2Pointer->setText(score2String);
+		highName->setText(highScoreName);
 	}
+	cout<<"2";
+	sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
+	cout<<"3";
 	sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
-	sprintf (highScoreName, "ON TOP: %s", score.getTopPlayer());
+	cout<<"4";
 	scorePointer->setText(scoreString);
+	cout<<"5";
 	highScore->setText(highScoreString);
-	score2Pointer->setText(score2String);
-	highName->setText(highScoreName);
+	
+	cout<<"6";
 
 	if (!paused)
 	{
@@ -329,9 +340,9 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				
 				gameUpdate* clientState = players[1]->getPlayerGameState();
 				
-				multiUpdate->paddlePos[0] = -clientState->paddlePos[0];
+				multiUpdate->paddlePos[0] = clientState->paddlePos[0];
 				multiUpdate->paddlePos[1] =  clientState->paddlePos[1];
-				multiUpdate->paddlePos[2] = -clientState->paddlePos[2];
+				multiUpdate->paddlePos[2] = clientState->paddlePos[2];
 				
 				multiUpdate->paddleDir[PAD_UP]    =  clientState->paddleDir[PAD_UP];
 				multiUpdate->paddleDir[PAD_DOWN]  =  clientState->paddleDir[PAD_DOWN];
@@ -396,14 +407,14 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
         if(!isMultiplayer || isServer){
         	players[0]->updatePadDirection(PAD_RIGHT, true);
         } else{
-        	players[1]->updatePadDirection(PAD_RIGHT, true);
+        	players[1]->updatePadDirection(PAD_LEFT, true);
         }
         break;
     case OIS::KC_A:
     	if(!isMultiplayer || isServer){
         	players[0]->updatePadDirection(PAD_LEFT, true);
         } else{
-        	players[1]->updatePadDirection(PAD_LEFT, true);
+        	players[1]->updatePadDirection(PAD_RIGHT, true);
         }
         break;  
     case OIS::KC_W:
@@ -459,14 +470,14 @@ bool GTA2Application::keyReleased( const OIS::KeyEvent& evt )
         if(!isMultiplayer || isServer){
         	players[0]->updatePadDirection(PAD_RIGHT, false);
         } else{
-        	players[1]->updatePadDirection(PAD_RIGHT, false);
+        	players[1]->updatePadDirection(PAD_LEFT, false);
         }
         break;
     case OIS::KC_A:
     	if(!isMultiplayer || isServer){
         	players[0]->updatePadDirection(PAD_LEFT, false);
         } else{
-        	players[1]->updatePadDirection(PAD_LEFT, false);
+        	players[1]->updatePadDirection(PAD_RIGHT, false);
         }
         break;  
     case OIS::KC_W:
