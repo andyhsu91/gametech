@@ -36,7 +36,7 @@ static int wallScale = 4;
 static PhysicsSimulator bullet;
 SoundManager* sound_manager;
 NetworkManager* network_manager;
-vector<Player*> players;	//player[0] is me. player[1] is them
+vector<Player*> players;	//player[0] is server. player[1] is client
 static Environment env;
 static Ball ball;
 static Score score;
@@ -134,13 +134,15 @@ void GTA2Application::createScene(void)
     	players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
 	}    
 	if(isMultiplayer) {
-		if(isServer){
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50", false));
-    	}
-    	else{
-	    	players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Green50", true));
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Red50", false));
+		
+		players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
+		players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50", false));
+    	
+    	if(!isServer){
+    		//move camera to opposite side if 
+    		mCamera->setPosition(Ogre::Vector3(0,100,-500));
+			// Look back along -Z
+			mCamera->lookAt(Ogre::Vector3(0,0,0));
     	}
     	
     	multiUpdate = new gameUpdate;
@@ -314,18 +316,18 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			else {
 				//I am client
 				bullet.updateWorld(evt); //without this paddles don't move
-				players[0]->updatePosition(evt); //update myself normally
+				players[1]->updatePosition(evt); //update myself normally
 				
 				if(newPacketReceived){
-					players[1]->updatePosition(evt, network_manager->getGameUpdate());
+					players[0]->updatePosition(evt, network_manager->getGameUpdate());
 					ball.update(network_manager->getGameUpdate());	
 					score.updateScore(network_manager->getGameUpdate());
 				}
 				else{
-					players[1]->updatePosition(evt);
+					players[0]->updatePosition(evt);
 				}
 				
-				gameUpdate* clientState = players[0]->getPlayerGameState();
+				gameUpdate* clientState = players[1]->getPlayerGameState();
 				
 				multiUpdate->paddlePos[0] = -clientState->paddlePos[0];
 				multiUpdate->paddlePos[1] =  clientState->paddlePos[1];
@@ -391,16 +393,32 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
     */
     
     case OIS::KC_D:
-        players[0]->updatePadDirection(PAD_RIGHT, true);
+        if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_RIGHT, true);
+        } else{
+        	players[1]->updatePadDirection(PAD_RIGHT, true);
+        }
         break;
     case OIS::KC_A:
-    	players[0]->updatePadDirection(PAD_LEFT, true);
+    	if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_LEFT, true);
+        } else{
+        	players[1]->updatePadDirection(PAD_LEFT, true);
+        }
         break;  
     case OIS::KC_W:
-	    players[0]->updatePadDirection(PAD_UP, true);
+	    if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_UP, true);
+        } else{
+        	players[1]->updatePadDirection(PAD_UP, true);
+        }
         break;    
     case OIS::KC_S:
-    	players[0]->updatePadDirection(PAD_DOWN, true);
+    	if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_DOWN, true);
+        } else{
+        	players[1]->updatePadDirection(PAD_DOWN, true);
+        }
         break;
          
 	case OIS::KC_C:
@@ -424,7 +442,7 @@ bool GTA2Application::keyReleased( const OIS::KeyEvent& evt )
     {
     
     //Debugging second player, delete when done
-    case OIS::KC_L:
+    /*case OIS::KC_L:
         players[1]->updatePadDirection(PAD_RIGHT, false);
         break;
     case OIS::KC_J:
@@ -436,18 +454,34 @@ bool GTA2Application::keyReleased( const OIS::KeyEvent& evt )
     case OIS::KC_K:
     	players[1]->updatePadDirection(PAD_DOWN, false);
         break; 
-        
+   */     
     case OIS::KC_D:
-    	players[0]->updatePadDirection(PAD_RIGHT, false);
+        if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_RIGHT, false);
+        } else{
+        	players[1]->updatePadDirection(PAD_RIGHT, false);
+        }
         break;
     case OIS::KC_A:
-       	players[0]->updatePadDirection(PAD_LEFT, false);
+    	if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_LEFT, false);
+        } else{
+        	players[1]->updatePadDirection(PAD_LEFT, false);
+        }
         break;  
     case OIS::KC_W:
-    	players[0]->updatePadDirection(PAD_UP, false);
+	    if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_UP, false);
+        } else{
+        	players[1]->updatePadDirection(PAD_UP, false);
+        }
         break;    
     case OIS::KC_S:
-    	players[0]->updatePadDirection(PAD_DOWN, false);
+    	if(!isMultiplayer || isServer){
+        	players[0]->updatePadDirection(PAD_DOWN, false);
+        } else{
+        	players[1]->updatePadDirection(PAD_DOWN, false);
+        }
         break;
                     
     default:
