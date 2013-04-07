@@ -248,29 +248,30 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     //Need to capture/update each device
     mKeyboard->capture();
     mMouse->capture();
-	cout<<"1";
+
 	if(isMultiplayer){
 		if(isServer){
-			
+			sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
 			sprintf (score2String, "HIS SCORE: %d", score.getClientScore());
 		}else{
 			sprintf (scoreString, "MY SCORE: %d", score.getClientScore());
 			sprintf (score2String, "HIS SCORE: %d", score.getServerScore());
 		}
+		sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
 		sprintf (highScoreName, "ON TOP: %s", score.getTopPlayer());
 		score2Pointer->setText(score2String);
+		scorePointer->setText(scoreString);
+		highScore->setText(highScoreString);
 		highName->setText(highScoreName);
+		
 	}
-	cout<<"2";
-	sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
-	cout<<"3";
-	sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
-	cout<<"4";
-	scorePointer->setText(scoreString);
-	cout<<"5";
-	highScore->setText(highScoreString);
-	
-	cout<<"6";
+	else{
+		sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
+		sprintf (highScoreString, "HI-SCORE: %d", score.getMaxScore());
+		scorePointer->setText(scoreString);
+		highScore->setText(highScoreString);
+	}
+
 
 	if (!paused)
 	{
