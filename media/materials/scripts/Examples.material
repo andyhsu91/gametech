@@ -35,6 +35,21 @@ material Examples/Wood
 	}
 }
 
+material Examples/Tennis
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture tennis.jpg
+
+			}
+		}
+	}
+}
+
 material Examples/DANBO
 {
 	technique

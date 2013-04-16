@@ -21,7 +21,11 @@ Table of Contents//
 1.1 Objective//
 ///////////////
 
-	Keep boxman bouncing within the arena by moving the paddle. Each successive bounce increases score and speed. Let him out and your score will drop to zero and the game resets. Good luck, sir.
+	Single Player Mode:
+		- Keep boxman bouncing within the arena by moving the paddle. Each successive bounce increases score and speed. Let him out and your score will drop to zero and the game resets. Good luck, sir.
+
+	Multiplayer Mode:
+		- Keep boxman bouncing within the arena by moving the paddle. Each successive bounce increases both your score and your opponents score. If you miss the ball, then your score drops back to zero.
 
 //////////////
 1.2 Controls//
@@ -34,6 +38,7 @@ Table of Contents//
 
 	C		-> toggle move cursor vs. camera look
 	M		-> toggle music/sounds
+	P		-> Pause game
 	ESC		-> quit game
 
 	Mouse	-> move cursor

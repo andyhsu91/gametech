@@ -17,7 +17,8 @@ int maxVelocity = 300;
 static int speedModifier = 3;
 float mass = 100.0;
 static int edgeSize = 500;
-
+float nodeScale = .1;
+float rigidScale = 50.0;
 gameUpdate* mBallState;
 
 Ball::Ball(void)
@@ -39,24 +40,26 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	sound_manager = sm;
 	score = sc;
 	isMulti = isMultiplayer;
-	cooldownMax = 20.0;
+	cooldownMax = 100.0; //frames between playing the same sound
 	
 	// Create an Entity
-    Ogre::Entity* ballz = mSceneMgr->createEntity("Sphere", "Danboard.mesh");
- 
+    Ogre::Entity* ballz = mSceneMgr->createEntity("Sphere", "sphere.mesh");
+ 	
     // Create a SceneNode and attach the Entity to it
     ballNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("BallNode");
     ballNode->attachObject(ballz);
 
-    ballNode->scale(5,5,5);
-    ballz->setMaterialName("Examples/DANBO");
+    ballNode->scale(nodeScale,nodeScale,nodeScale);
+    ballz->setMaterialName("Examples/Tennis");
    	ballz->setCastShadows(true);
-    
+    //ballz->getAnimationState("Attack1")->setEnabled(true);
+    //ballz->getAnimationState("Jump")->setLoop(true); 
+	
     //float mass = isServer ? 100.0 : 0.0;
     
     
     //change this line for danbo vs sphere
-    Ogre::Vector3 dim = 1.5*ballNode->getScale();
+    Ogre::Vector3 dim = rigidScale*ballNode->getScale();
     Ogre::Vector3 pos = ballNode->getPosition();
     ball = bullet->setRigidBoxBody(ballNode, dim, pos, mass);
     
@@ -86,7 +89,7 @@ void Ball::initBall(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 }
 void Ball::resetBall(btVector3 ballPos)
 {
-	float rf = 10.0;
+	float rf = 1.0;
 	//this function moves ball back to origin
 	btVector3 opposite = btVector3(-ballPos.getX()/rf, -ballPos.getY()/rf, -ballPos.getZ()/rf);
 
@@ -156,14 +159,18 @@ void Ball::update()
 		resetBall(bulletBallPos);
 		
 		if(bulletBallPos.getZ() > edgeSize*1.01) {
-			if(score->resetServerScore()) {
+			if(score->resetServerScore() && cooldown.getZ()==0.0) {
 				sound_manager->playFailure();
 			}	
+			cooldown.setZ(cooldownMax);
 		}
 		
 		if(bulletBallPos.getZ() < -edgeSize*1.01) {
 			score->resetClientScore();
-			sound_manager->playSuccess();
+			if(cooldown.getZ() == 0.0){
+				sound_manager->playSuccess();
+			}
+			cooldown.setZ(cooldownMax);
 		}
 		
 	} 
@@ -257,7 +264,8 @@ void Ball::setVelocity(float* vel){
 }
 
 void Ball::updateBulletBallPos(btVector3 gameUpdateBallPos, btVector3 bulletBallPos){
-	
+	//client side function that moves ball where the server says the ball is
+	//if this function isn't called in a while, bullet will continue to estimate where it thinks the ball should be
 	float xDiff = gameUpdateBallPos.getX() - bulletBallPos.getX();
 	float yDiff = gameUpdateBallPos.getY() - bulletBallPos.getY();
 	float zDiff = gameUpdateBallPos.getZ() - bulletBallPos.getZ();
@@ -288,15 +296,17 @@ void Ball::update(gameUpdate* update)
 		resetBall(gameUpdateBallPos);
 		
 		if(gameUpdateBallPos.getZ() > edgeSize*1.01) {
-			if(score->resetServerScore()) {
+			if(score->resetServerScore() && cooldown.getZ()==0.0) {
 				sound_manager->playFailure();
 			}	
+			cooldown.setZ(cooldownMax);
 		}
 		
-		if(gameUpdateBallPos.getZ() < -edgeSize*1.01) {
+		if(gameUpdateBallPos.getZ() < -edgeSize*1.01 && cooldown.getZ()==0.0) {
 			score->resetClientScore();
 			sound_manager->playSuccess();
 		}
+		cooldown.setZ(cooldownMax);
 	} 
 }
 gameUpdate* Ball::getBallGameState()

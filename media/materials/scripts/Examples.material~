@@ -20,6 +20,52 @@ material Examples/SphereMappedRustySteel
 	}
 }
 
+material Examples/Wood
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture wood-texture.jpg
+
+			}
+		}
+	}
+}
+
+material Examples/DANBO
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture tennis.jpg
+
+			}
+		}
+	}
+}
+
+material Examples/DANBO
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture DANBO.jpg
+
+			}
+		}
+	}
+}
+
+
 material Examples/Madoka
 {
 	technique
@@ -66,26 +112,28 @@ material Examples/Blue50
 		
 			texture_unit
 			{
-	  			colour_op_ex source1 src_manual src_current 0 1 0
+	  			colour_op_ex source1 src_manual src_current 0 0 1
 				alpha_op_ex source1 src_manual src_current 0.5
 			}
     	}
 	}
 }
 
-material Examples/WoodFloor
+material Examples/Green50
 {
 	technique
 	{
 		pass
 		{
-			ambient 0.1 0.1 0.1
-
+			scene_blend alpha_blend
+			depth_write off
+		
 			texture_unit
 			{
-				texture woodfloor.jpg
+	  			colour_op_ex source1 src_manual src_current 0 1 0
+				alpha_op_ex source1 src_manual src_current 0.5
 			}
-		}
+    	}
 	}
 }
 
